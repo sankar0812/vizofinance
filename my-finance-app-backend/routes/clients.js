@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const prisma = require('../prismaClient');
+const { auth, authorize } = require('../middleware/auth');
+const bcrypt = require('bcrypt');
 
 // Helper function for loan calculations
 const calculateLoanPaymentDetails = (principal, annualInterestRate, loanTermMonths) => {
@@ -30,7 +32,7 @@ const calculateLoanPaymentDetails = (principal, annualInterestRate, loanTermMont
 };
 
 // GET all clients
-router.get('/', async (req, res) => {
+router.get('/', auth, authorize('ADMIN', 'EMPLOYEE'),async (req, res) => {
   try {
     const clients = await prisma.client.findMany({
       include: { paymentHistory: true },
@@ -44,28 +46,71 @@ router.get('/', async (req, res) => {
 });
 
 // GET a single client by ID
-router.get('/:id', async (req, res) => {
-  try {
-    const client = await prisma.client.findUnique({
-      where: { id: parseInt(req.params.id) },
-      include: { paymentHistory: true },
-    });
-    if (!client) return res.status(404).json({ message: 'Client not found' });
-    res.json(client);
-  } catch (err) {
-    console.error('Error fetching single client:', err);
-    res.status(500).json({ message: 'Server error fetching client.' });
+router.get('/:id', auth, async (req, res) => {
+  const clientId = parseInt(req.params.id);
+
+  // If USER, make sure they can only access their own client profile
+  if (req.user.role === 'USER') {
+    const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+    if (!user?.clientId || user.clientId !== clientId) {
+      return res.status(403).json({ message: 'You can only access your own data.' });
+    }
   }
+
+  const client = await prisma.client.findUnique({
+    where: { id: clientId },
+    include: { paymentHistory: true },
+  });
+
+  if (!client) return res.status(404).json({ message: 'Client not found' });
+  res.json(client);
 });
 
+
 // CREATE a new client
-router.post('/', async (req, res) => {
+router.post('/', auth, authorize('ADMIN', 'EMPLOYEE'), async (req, res) => {
   try {
     const {
       name, email, phone, address, joinedDate, status,
-      revenue, transactions, loanAmount, interestRate, loanTermMonths
+      revenue, transactions, loanAmount, interestRate, loanTermMonths,
+      password, role // Accept role from request
     } = req.body;
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+      return res.status(400).json({ message: 'User with this email already exists.' });
+    }
 
+    // Validate and restrict role creation
+    let finalRole = 'USER'; // Default fallback
+    const currentUserRole = req.user.role;
+
+    if (currentUserRole === 'ADMIN') {
+      // Allow ADMIN to assign any role
+      if (['USER', 'EMPLOYEE', 'ADMIN'].includes(role)) {
+        finalRole = role;
+      }
+    } else if (currentUserRole === 'EMPLOYEE') {
+      // EMPLOYEE can only assign USER role
+      if (role === 'USER') {
+        finalRole = 'USER';
+      } else {
+        return res.status(403).json({ message: 'EMPLOYEEs can only create USER accounts.' });
+      }
+    }
+
+    const hashedPassword = await bcrypt.hash(phone, 10);
+
+    // Create user
+    const newUser = await prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        role: finalRole,
+      },
+    });
+
+    // Create client
     const client = await prisma.client.create({
       data: {
         name,
@@ -80,15 +125,17 @@ router.post('/', async (req, res) => {
         interestRate: interestRate || 0,
         loanTermMonths: loanTermMonths || 0,
         currentOutstandingLoanAmount: loanAmount || 0,
+        userId: newUser.id,
       },
     });
 
-    res.status(201).json(client);
+    res.status(201).json({ client, user: newUser });
   } catch (err) {
-    console.error('Error creating client:', err);
+    console.error('Error creating client and user:', err);
     res.status(400).json({ message: err.message });
   }
 });
+
 
 // // UPDATE a client
 // router.put('/:id', async (req, res) => {
@@ -130,7 +177,7 @@ router.post('/', async (req, res) => {
 // });
 
 // UPDATE a client
-router.put('/:id', async (req, res) => {
+router.put('/:id',auth, authorize('ADMIN'), async (req, res) => {
   try {
     const clientId = parseInt(req.params.id);
     const { paymentHistory, ...clientData } = req.body;
@@ -167,7 +214,7 @@ router.put('/:id', async (req, res) => {
 
 
 // DELETE client
-router.delete('/:id', async (req, res) => {
+router.delete('/:id',auth, authorize('ADMIN'), async (req, res) => {
   try {
     await prisma.paymentHistory.deleteMany({ where: { clientId: parseInt(req.params.id) } });
     await prisma.client.delete({ where: { id: parseInt(req.params.id) } });
@@ -179,7 +226,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 // RECORD PAYMENT
-router.put('/:id/record-payment', async (req, res) => {
+router.put('/:id/record-payment', auth, authorize('ADMIN', 'EMPLOYEE'), async (req, res) => {
   try {
     const { amountPaid, paymentDate } = req.body;
 
@@ -241,6 +288,16 @@ router.put('/:id/record-payment', async (req, res) => {
     console.error('Error recording payment:', err);
     res.status(500).json({ message: 'Server error recording payment.' });
   }
+});
+
+router.get('/me', auth, authorize('USER'), async (req, res) => {
+  const user = await prisma.user.findUnique({
+    where: { id: req.user.id },
+    include: { client: { include: { paymentHistory: true } } },
+  });
+
+  if (!user?.client) return res.status(404).json({ message: 'Client data not found' });
+  res.json(user.client);
 });
 
 module.exports = router;

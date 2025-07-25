@@ -1,25 +1,25 @@
 const jwt = require('jsonwebtoken');
 
 const auth = (req, res, next) => {
-  // Get token from header
   const token = req.header('Authorization');
+  if (!token) return res.status(401).json({ message: 'No token, authorization denied.' });
 
-  // Check if no token
-  if (!token) {
-    return res.status(401).json({ message: 'No token, authorization denied.' });
-  }
+  const tokenString = token.startsWith('Bearer ') ? token.slice(7) : token;
 
-  // Extract "Bearer " prefix if present
-  const tokenString = token.startsWith('Bearer ') ? token.slice(7, token.length) : token;
-
-  // Verify token
   try {
     const decoded = jwt.verify(tokenString, process.env.JWT_SECRET);
-    req.user = decoded.id; // Attach user ID to request
+    req.user = { id: decoded.id, role: decoded.role }; 
     next();
   } catch (err) {
     res.status(403).json({ message: 'Token is not valid.' });
   }
 };
 
-module.exports = auth;
+const authorize = (...roles) => (req, res, next) => {
+  if (!req.user || !roles.includes(req.user.role)) {
+    return res.status(403).json({ message: 'Access denied: insufficient permissions' });
+  }
+  next();
+};
+
+module.exports = { auth, authorize };

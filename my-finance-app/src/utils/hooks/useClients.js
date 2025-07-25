@@ -10,6 +10,8 @@ export function useClients() {
   const [error, setError] = useState(null)
 
   const fetchClients = useCallback(async () => {
+    console.log(token, 'AUTH TOKEN');
+    
     setLoading(true)
     setError(null)
     try {

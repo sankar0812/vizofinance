@@ -12,10 +12,12 @@ export function AuthProvider({ children }) {
     return storedUser ? JSON.parse(storedUser) : null;
   });
 
-  const login = useCallback((email, token) => {
-    const userData = { email, token };
+  const login = useCallback((email, name, role, token) => {
+    const userData = { email, name, role, token };
+    console.log(userData, 'UserData');
+    
     setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData)); // persist
+    localStorage.setItem('user', JSON.stringify(userData));
   }, []);
 
   const logout = useCallback(() => {

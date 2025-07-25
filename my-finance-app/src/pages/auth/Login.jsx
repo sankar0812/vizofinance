@@ -47,7 +47,7 @@ function Login() {
       })
       const data = await response.json()
       if (response.ok) {
-        login(email,data.token)
+        login(email, data?.name, data?.role, data.token)
         navigate('/dashboard')
       } else {
         setError(data.message || 'Login failed')

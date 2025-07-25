@@ -3,6 +3,7 @@ const router = express.Router();
 const prisma = require('../prismaClient');
 const { auth, authorize } = require('../middleware/auth');
 const bcrypt = require('bcrypt');
+const sendMail = require('../utils/mailer');
 
 // Helper function for loan calculations
 const calculateLoanPaymentDetails = (principal, annualInterestRate, loanTermMonths) => {
@@ -283,7 +284,29 @@ router.put('/:id/record-payment', auth, authorize('ADMIN', 'EMPLOYEE'), async (r
       },
     });
 
-    res.json({ message: 'Payment recorded successfully!' });
+    console.log(client.email, 'Client Email');
+    
+    // Send Mail
+    await sendMail(
+      client.email,
+      'Loan Payment Confirmation',
+      `
+      <h3>Hello ${client.name},</h3>
+      <p>Thank you for your payment.</p>
+      <p><strong>Amount Paid:</strong> ₹${amountPaid}</p>
+      <p><strong>Principal Paid:</strong> ₹${actualPrincipalPaid}</p>
+      <p><strong>Interest Paid:</strong> ₹${actualInterestPaid}</p>
+      <p><strong>Remaining Balance:</strong> ₹${newOutstanding}</p>
+      <p>Date: ${dateOfPayment.toLocaleDateString()}</p>
+      <br/>
+      <p>Regards,<br/>VizoFinance App Team</p>
+      `
+    );
+
+    console.log('Mail sent succesfuly');
+    
+
+    res.json({ message: 'Payment recorded and confirmation email sent successfully!' });
   } catch (err) {
     console.error('Error recording payment:', err);
     res.status(500).json({ message: 'Server error recording payment.' });

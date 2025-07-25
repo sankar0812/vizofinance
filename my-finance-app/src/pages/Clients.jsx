@@ -12,8 +12,12 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useClients } from '../utils/hooks/useClients';
 import { getClientId } from '../utils/getClientId';
+import { useAuth } from './auth/AuthContext';
+import UnauthorizedError from './exception/unauthorized';
 
 const Clients = () => {
+  const { token, user } = useAuth() || {};
+  const isAdmin = user?.role === 'ADMIN';
   const navigate = useNavigate();
   const theme = useTheme();
   const isSm = useMediaQuery(theme.breakpoints.down('sm'));
@@ -103,19 +107,23 @@ const Clients = () => {
     }
   };
 
-  if (loading) {
+  if (loading && isAdmin) {
     return (
       <Box p={4}>
         <Typography>Loading clients...</Typography>
       </Box>
     );
   }
-  if (error) {
+  if (error && isAdmin) {
     return (
       <Box p={4}>
         <Typography color="error">Failed to load clients: {error.message}</Typography>
       </Box>
     );
+  }
+
+  if(!isAdmin){
+    return <UnauthorizedError />;
   }
 
   return (

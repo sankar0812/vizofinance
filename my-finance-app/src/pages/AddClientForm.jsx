@@ -10,6 +10,8 @@ import {
   MenuItem,
   Button,
   InputAdornment,
+  Autocomplete,
+  Box,
 } from '@mui/material';
 import {
   User,
@@ -23,8 +25,14 @@ import {
   Percent,
   Clock,
 } from 'lucide-react';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { generateId } from '../utils/helpers';
 import { useClients } from '../utils/hooks/useClients';
+
+const roles = ['USER', 'ADMIN', 'EMPLOYEE'];
+const statusOptions = ['Active', 'Inactive', 'Lead'];
 
 const AddClientForm = () => {
   const { clientId } = useParams();
@@ -102,15 +110,16 @@ const AddClientForm = () => {
       <DialogTitle>{clientToEdit ? 'Edit Client' : 'Add New Client'}</DialogTitle>
       <DialogContent dividers>
         <form id="add-client-form" onSubmit={handleSubmit}>
-          <Grid container spacing={2} alignItems="center">
+          <Grid container spacing={2} alignItems="center" sx={{ m: 2 }}>
             {/* Row 1 */}
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} md={12} lg={12} >
               <TextField
                 required
                 fullWidth
                 size="small"
                 label="Client Name"
                 name="name"
+                placeholder='Enter client name'
                 value={client.name}
                 onChange={handleChange}
                 InputProps={{
@@ -130,6 +139,7 @@ const AddClientForm = () => {
                 type="email"
                 label="Email"
                 name="email"
+                placeholder='Enter email address'
                 value={client.email}
                 onChange={handleChange}
                 InputProps={{
@@ -145,6 +155,7 @@ const AddClientForm = () => {
               <TextField
                 fullWidth
                 size="small"
+                placeholder='Enter phone number'
                 label="Phone"
                 name="phone"
                 value={client.phone}
@@ -158,7 +169,8 @@ const AddClientForm = () => {
                 }}
               />
             </Grid>
-
+          </Grid>
+          <Grid container spacing={2} alignItems="center" sx={{ m: 2 }}>
             {/* Row 2 */}
             <Grid item xs={12} md={4}>
               <TextField
@@ -166,6 +178,7 @@ const AddClientForm = () => {
                 size="small"
                 label="Address"
                 name="address"
+                placeholder='Enter address'
                 value={client.address}
                 onChange={handleChange}
                 InputProps={{
@@ -178,47 +191,56 @@ const AddClientForm = () => {
               />
             </Grid>
             <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                size="small"
-                type="date"
-                label="Joined Date"
-                name="joinedDate"
-                InputLabelProps={{ shrink: true }}
-                value={client.joinedDate}
-                onChange={handleChange}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <CalendarIcon size={16} />
-                    </InputAdornment>
-                  ),
-                }}
-              />
+              <Box sx={{ width: '93%' }}>
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <DatePicker
+                  label="Joined Date"
+                  value={client.joinedDate ? new Date(client.joinedDate) : null}
+                  // sx={{ width: 300 }}
+                  onChange={(newValue) =>
+                    handleChange({
+                      target: { name: 'joinedDate', value: newValue },
+                    })
+                  }
+                  slotProps={{
+                    textField: {
+                      size: 'small',
+                      name: 'joinedDate',
+                      InputProps: {
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <CalendarIcon size={16} />
+                          </InputAdornment>
+                        ),
+                      },
+                    },
+                  }}
+                />
+              </LocalizationProvider>
+              </ Box>
             </Grid>
             <Grid item xs={12} md={4}>
-              <TextField
-                select
-                fullWidth
-                size="small"
-                label="Status"
-                name="status"
-                value={client.status}
-                onChange={handleChange}
-                InputProps={{
+              <Autocomplete
+                disablePortal
+                size='small'
+                options={statusOptions}
+                sx={{ width: "185%" }}
+                value={client.status || 'Active'}
+                onChange={(event, newValue) =>
+                  handleChange({ target: { name: 'status', value: newValue } })
+                }
+                renderInput={(params) => <TextField {...params} label="Status" InputProps={{
+                  ...params.InputProps,
                   startAdornment: (
                     <InputAdornment position="start">
                       <Briefcase size={16} />
                     </InputAdornment>
                   ),
-                }}
-              >
-                <MenuItem value="Active">Active</MenuItem>
-                <MenuItem value="Inactive">Inactive</MenuItem>
-                <MenuItem value="Lead">Lead</MenuItem>
-              </TextField>
+                }} />}
+              />
             </Grid>
-
+          </ Grid>
+          <Grid container spacing={2} alignItems="center" sx={{ m: 2 }}>
             {/* Row 3 */}
             <Grid item xs={12} md={4}>
               <TextField
@@ -274,7 +296,8 @@ const AddClientForm = () => {
                 }}
               />
             </Grid>
-
+          </ Grid>
+          <Grid container spacing={2} alignItems="center" sx={{ m: 2 }}>
             {/* Row 4 */}
             <Grid item xs={12} md={4}>
               <TextField
@@ -314,28 +337,27 @@ const AddClientForm = () => {
               />
             </Grid>
             {/* {currentUser?.role === 'ADMIN' && ( */}
-              <Grid item xs={12} md={4}>
-                <TextField
-                  select
-                  fullWidth
-                  size="small"
-                  label="Role"
-                  name="role"
-                  value={client.role}
-                  onChange={handleChange}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Briefcase size={16} />
-                      </InputAdornment>
-                    ),
-                  }}
-                >
-                  <MenuItem value="USER">Client</MenuItem>
-                  <MenuItem value="EMPLOYEE">Employee</MenuItem>
-                  <MenuItem value="ADMIN">Admin</MenuItem>
-                </TextField>
-              </Grid>
+            <Grid item xs={12} md={4}>
+              <Autocomplete
+              fullWidth
+                disablePortal
+                size='small'
+                options={roles}
+                sx={{ width: "185%" }}
+                value={client.role || 'USER'}
+                onChange={(event, newValue) =>
+                  handleChange({ target: { name: 'role', value: newValue } })
+                }
+                renderInput={(params) => <TextField {...params} label="Role" InputProps={{
+                  ...params.InputProps,
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Briefcase size={16} />
+                    </InputAdornment>
+                  ),
+                }} />}
+              />
+            </Grid>
             {/* )} */}
           </Grid>
         </form>

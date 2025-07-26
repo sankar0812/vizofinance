@@ -30,13 +30,35 @@ import { useAuth } from './auth/AuthContext'
 export default function DashboardOverview() {
   const { token, user } = useAuth() || {};
   const isAdmin = user?.role === 'ADMIN';
+  const isUser = user?.role === 'USER';
+  const { data: userData } = useAuth();
+
+  
   const { data: clients, loading, error, refetch, deleteClient } = useClients(isAdmin);
+
+  // const {data: userClients, loading: userLoading, error: userError} = useClients(isUser, token);  
 
   // ---- summary metrics --------------------------------------------------
   const totalClients = clients.length
   const totalRevenue = clients.reduce((sum, c) => sum + (c.revenue || 0), 0)
   const avgRevenuePerClient = totalClients > 0 ? totalRevenue / totalClients : 0
   const activeClients = clients.filter((c) => c.status === 'Active').length
+
+  // const loanAmount = clients.reduce((sum, c) => sum + (c.loanAmount || 0), 0)
+  const userLoanAmount = user?.loanAmount || 0;
+  const totalPaid = clients.reduce((sum, c) => sum + (c.totalPaid || 0), 0)
+  const totalDue = clients.reduce((sum, c) => sum + (c.totalDue || 0), 0)
+  const totalInterest = clients.reduce((sum, c) => sum + (c.totalInterest || 0), 0)
+
+  // ---- revenue data for chart -------------------------------------------
+  // Assuming clients have a 'joinedDate' and 'revenue' field 
+  // Default values in case user is null
+// const userLoanAmount = user?.loanAmount || 0;
+// const totalPaid = user?.totalPaid || 0;
+// const totalDue = user?.totalDue || 0;
+// const totalInterest = user?.totalInterest || 0;
+
+    
 
   const revenueData = useMemo(() => {
     return clients
@@ -114,7 +136,7 @@ export default function DashboardOverview() {
         </Typography>
       </Box>
 
-      {user?.role === 'Admin' ? (
+      {user?.role === 'ADMIN' ? (
         <>
           {/* State Cards */}
           <Grid
@@ -241,9 +263,50 @@ export default function DashboardOverview() {
           </Paper>
         </>
       ) : (
-        <Box sx={{ mb: 2 }}>
+        <Box sx={{ mb: 6}}>
           <Typography variant="h5" fontWeight={600}>
             Welcome, {user?.email} 👋
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+          {/* State Cards */}
+          <Grid
+            container
+            spacing={2}
+            sx={{ mb: 4, justifyContent: 'space-between', alignItems: 'stretch' }}
+          >
+            <Grid item xs={12} sm={6} md={3} sx={{ display: 'flex' }}>
+              <StatCard
+                label="Loan Amount"
+                value={formatINR(user?.loanAmount || 0)}
+                icon={<Users size={20} />}    
+                color={"user.main"} 
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3} sx={{ display: 'flex' }}>
+              <StatCard
+                label="Total Paid"
+                value={formatINR(totalPaid)}
+                icon={<IndianRupee size={20} />}
+                color="success.main"
+              />
+              </Grid>
+            <Grid item xs={12} sm={6} md={3} sx={{ display: 'flex' }}>
+              <StatCard
+                label="Total Due"
+                value={formatINR(totalDue)}
+                icon={<TrendingUp size={20} />}
+                color="secondary.main"   
+              />
+              </Grid>
+            <Grid item xs={12} sm={6} md={3} sx={{ display: 'flex' }}>
+              <StatCard 
+                label="Total Interest"
+                value={formatINR(totalInterest)}
+                icon={<UserIcon size={20} />}
+                color="warning.main"  
+              />
+              </Grid>    
+          </Grid>
           </Typography>
         </Box>
       )}

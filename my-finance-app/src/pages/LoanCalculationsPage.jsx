@@ -33,7 +33,7 @@ import ClientPaymentHistory from './ClientPaymentHistory';
 import { useAuth } from './auth/AuthContext';
 import UnauthorizedError from './exception/unauthorized';
 
-const API_BASE_URL = 'http://localhost:5000/api/clients';
+const API_BASE_URL = import.meta.env.VITE_APP_BASE_URL;
 
 export default function LoanCalculationsPage({ customConfirm }) {
   const theme = useTheme();
@@ -127,7 +127,7 @@ export default function LoanCalculationsPage({ customConfirm }) {
     setSubmitting(true);
     try {
       const response = await fetch(
-        `${API_BASE_URL}/${selectedClientForPayment.id}/record-payment`,
+        `${API_BASE_URL}/api/clients/${selectedClientForPayment.id}/record-payment`,
         {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`},

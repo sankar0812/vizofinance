@@ -47,7 +47,7 @@ router.get('/', auth, authorize('ADMIN', 'EMPLOYEE'),async (req, res) => {
 });
 
 // GET a single client by ID
-router.get('/:id', auth, async (req, res) => {
+router.get('/:id', auth, authorize('ADMIN', 'USER'), async (req, res) => {
   const clientId = parseInt(req.params.id);
 
   // If USER, make sure they can only access their own client profile

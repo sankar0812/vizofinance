@@ -87,12 +87,12 @@ const LoanAmortization = ({ loanAmount, annualInterestRate, loanTermMonths }) =>
         </Typography>
         <Box sx={{ height: 300 }}>
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={amortizationData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+            <AreaChart data={amortizationData} margin={{ top: 0, right: 0, left: 30, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-              <XAxis dataKey="month" label={{ value: "Month", position: "insideBottom", offset: 0 }} />
+              <XAxis dataKey="month" label={{ value: "", position: "insideBottom", offset: 0 }} />
               <YAxis
                 tickFormatter={(value) => formatINR(value)}
-                label={{ value: "Amount", angle: -90, position: "insideLeft" }}
+                label={{ value: "", angle: -90, position: "insideLeft" }}
               />
               <Tooltip
                 contentStyle={{ backgroundColor: '#333', border: 'none', borderRadius: '8px', color: '#fff' }}

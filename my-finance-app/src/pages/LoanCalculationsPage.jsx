@@ -95,20 +95,20 @@ export default function LoanCalculationsPage({ customConfirm }) {
   };
 
   const handleIncludeInterestChange = (checked) => {
-  setIncludeInterest(checked);
-  if (checked && selectedClientForPayment) {
-    const P = selectedClientForPayment.loanAmount || 0;
-    const annualRate = selectedClientForPayment.interestRate || 0;
-    const n = selectedClientForPayment.loanTermMonths || 1;
+    setIncludeInterest(checked);
+    if (checked && selectedClientForPayment) {
+      const P = selectedClientForPayment.loanAmount || 0;
+      const annualRate = selectedClientForPayment.interestRate || 0;
+      const n = selectedClientForPayment.loanTermMonths || 1;
 
-    const r = annualRate / 12 / 100;
-    const emi = (P * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+      const r = annualRate / 12 / 100;
+      const emi = (P * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
 
-    setPaymentAmount(emi.toFixed(2));  // This will be close to 9415
-  } else {
-    setPaymentAmount('');
-  }
-};
+      setPaymentAmount(emi.toFixed(2));  // This will be close to 9415
+    } else {
+      setPaymentAmount('');
+    }
+  };
 
 
   const handleRecordPayment = async () => {
@@ -130,7 +130,7 @@ export default function LoanCalculationsPage({ customConfirm }) {
         `${API_BASE_URL}/api/clients/${selectedClientForPayment.id}/record-payment`,
         {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`},
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
           body: JSON.stringify({
             amountPaid: amt,
             paymentDate,
@@ -144,7 +144,7 @@ export default function LoanCalculationsPage({ customConfirm }) {
         try {
           const errorData = await response.json();
           if (errorData?.message) msg = errorData.message;
-        } catch (_) {}
+        } catch (_) { }
         throw new Error(msg);
       }
 
@@ -176,9 +176,9 @@ export default function LoanCalculationsPage({ customConfirm }) {
     );
   }
 
-    if(!isAdmin){
-      return <UnauthorizedError />;
-    }
+  if (!isAdmin) {
+    return <UnauthorizedError />;
+  }
 
   return (
     <Container sx={{ width: '100%', pb: 6 }}>
@@ -186,7 +186,7 @@ export default function LoanCalculationsPage({ customConfirm }) {
         variant="h4"
         fontWeight={700}
         color="text.primary"
-        sx={{ mb: 2, pb: 2, borderBottom: '1px solid', borderColor: 'divider' }}
+        sx={{ mb: 0, pb: 2 }}
       >
         Manage Loan Payments
       </Typography>
@@ -246,144 +246,112 @@ export default function LoanCalculationsPage({ customConfirm }) {
 
             return (
               <Card
-              key={client.id}
-              sx={{
-                flex: '0 0 350px',
-                width: 300,
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-              }}
-              variant="outlined"
+                key={client.id}
+                sx={{
+                  flex: '0 0 350px',
+                  width: 300,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                }}
+                variant="outlined"
               >
-              <CardContent>
-                <Typography variant="h6" fontWeight={700} gutterBottom>
-                {client.name}
-                </Typography>
-                <Stack spacing={0.75} sx={{ fontSize: '0.95rem' }}>
-                <ClientLoanLine icon={<DollarSign size={16} />} label="Original Loan" value={formatINR(loanAmt)} />
-                <ClientLoanLine icon={<DollarSign size={16} />} label="Outstanding" value={formatINR(outstanding)} />
-                <ClientLoanLine icon={<DollarSign size={16} />} label="Interest Rate" value={`${client?.interestRate || 0}%`} />
-                <ClientLoanLine icon={<DollarSign size={16} />} label="Loan Term" value={`${client?.loanTermMonths || 0} months`} />
-                <ClientLoanLine icon={<DollarSign size={16} />} label="Payments Made" value={paymentsMade} />
-                <ClientLoanLine icon={<DollarSign size={16} />} label="Last Payment Date" value={lastPaymentDate} />
-                <ClientLoanLine
-                  icon={<DollarSign size={16} />}
-                  label="Principal Paid"
-                  value={formatINR(
-                  Array.isArray(client.paymentHistory)
-                    ? client.paymentHistory.reduce((sum, p) => sum + (Number(p.principalPaid) || 0), 0)
-                    : 0
-                  )}
-                />
-                <ClientLoanLine
-                  icon={<DollarSign size={16} />}
-                  label="Interest Paid"
-                  value={formatINR(
-                  Array.isArray(client.paymentHistory)
-                    ? client.paymentHistory.reduce((sum, p) => sum + (Number(p.interestPaid) || 0), 0)
-                    : 0
-                  )}
-                />
-                <ClientLoanLine
-                  icon={<DollarSign size={16} />}
-                  label="Total Paid"
-                  value={formatINR(
-                  Array.isArray(client.paymentHistory)
-                    ? client.paymentHistory.reduce((sum, p) => sum + (Number(p.amountPaid) || 0), 0)
-                    : 0
-                  )}
-                />
-
-    {/* {Array.isArray(client.paymentHistory) &&
-     client.paymentHistory.length > 0 && (
-      <Box sx={{ mt: 1 }}>
-        <Box display="flex" alignItems="center" justifyContent="space-between">
-          <Typography variant="subtitle2" color="text.secondary">
-            Recent Payments:
-          </Typography>
-          <Box display="flex" alignItems="center" gap={1}>
-            <IconButton size="small" onClick={() => togglePaymentHistory(client.id)}>
-              {expandedClientIds[client.id] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-            </IconButton>
-            <Button
-              size="small"
-              variant="outlined"
-              onClick={() => {
-                console.log('Navigating to full payment history for client:', client.id);
-                navigate(`/dashboard/clients/${client.id}/payments`)}
-              }
-            >
-              View All
-            </Button>
-          </Box>
-        </Box>
-
-        <Stack spacing={0.5}>
-          {(expandedClientIds[client.id]
-            ? [...client.paymentHistory].reverse()
-            : [...client.paymentHistory].slice(-1).reverse()
-          ).map((p, idx) => (
-            <Typography key={idx} variant="body2" color="text.secondary">
-              {new Date(p.paymentDate).toLocaleDateString()} - {formatINR(p.amountPaid)}
-              {typeof p.principalPaid !== 'undefined' && typeof p.interestPaid !== 'undefined' && (
-                <> (Principal: {formatINR(p.principalPaid)}, Interest: {formatINR(p.interestPaid)})</>
-              )}
-            </Typography>
-          ))}
-        </Stack>
-      </Box>
-      
-    )
-  }; */}
-
-                {Array.isArray(client.paymentHistory) && client.paymentHistory.length > 0 && (
-                  <Box sx={{ mt: 1 }}>
-                  <Box display="flex" alignItems="center" justifyContent="space-between">
-                    <Typography variant="subtitle2" color="text.secondary">
-                    Recent Payments:
-                    </Typography>
-                    <IconButton
-                    size="small"
-                    onClick={() => togglePaymentHistory(client.id)}
-                    >
-                    {expandedClientIds[client.id] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                    </IconButton>
-                  </Box>
-                  <Stack spacing={0.5}>
-                    {(expandedClientIds[client.id]
-                    ? [...client.paymentHistory].reverse()
-                    : [...client.paymentHistory].slice(-1).reverse()
-                    ).map((p, idx) => (
-                    <Typography key={idx} variant="body2" color="text.secondary">
-                      {new Date(p.paymentDate).toLocaleDateString()} - {formatINR(p.amountPaid)}
-                      {typeof p.principalPaid !== 'undefined' && typeof p.interestPaid !== 'undefined' && (
-                      <>
-                        {' '}
-                        (Principal: {formatINR(p.principalPaid)}, Interest: {formatINR(p.interestPaid)})
-                      </>
+                <CardContent>
+                  <Typography variant="h6" fontWeight={700} gutterBottom>
+                    {client.name}
+                  </Typography>
+                  <Stack spacing={0.75} sx={{ fontSize: '0.95rem' }}>
+                    <ClientLoanLine icon={<DollarSign size={16} />} label="Original Loan" value={formatINR(loanAmt)} />
+                    <ClientLoanLine icon={<DollarSign size={16} />} label="Outstanding" value={formatINR(outstanding)} />
+                    <ClientLoanLine icon={<DollarSign size={16} />} label="Interest Rate" value={`${client?.interestRate || 0}%`} />
+                    <ClientLoanLine icon={<DollarSign size={16} />} label="Loan Term" value={`${client?.loanTermMonths || 0} months`} />
+                    <ClientLoanLine icon={<DollarSign size={16} />} label="Payments Made" value={paymentsMade} />
+                    <ClientLoanLine icon={<DollarSign size={16} />} label="Last Payment Date" value={lastPaymentDate} />
+                    <ClientLoanLine
+                      icon={<DollarSign size={16} />}
+                      label="Principal Paid"
+                      value={formatINR(
+                        Array.isArray(client.paymentHistory)
+                          ? client.paymentHistory.reduce((sum, p) => sum + (Number(p.principalPaid) || 0), 0)
+                          : 0
                       )}
-                    </Typography>
-                    ))}
+                    />
+                    <ClientLoanLine
+                      icon={<DollarSign size={16} />}
+                      label="Interest Paid"
+                      value={formatINR(
+                        Array.isArray(client.paymentHistory)
+                          ? client.paymentHistory.reduce((sum, p) => sum + (Number(p.interestPaid) || 0), 0)
+                          : 0
+                      )}
+                    />
+                    <ClientLoanLine
+                      icon={<DollarSign size={16} />}
+                      label="Total Paid"
+                      value={formatINR(
+                        Array.isArray(client.paymentHistory)
+                          ? client.paymentHistory.reduce((sum, p) => sum + (Number(p.amountPaid) || 0), 0)
+                          : 0
+                      )}
+                    />
+
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => {
+                        navigate(`/dashboard/clients/${client.id}/payments`);
+                      }}
+                    >
+                      View All
+                    </Button>
+
+                    {/* {Array.isArray(client.paymentHistory) && client.paymentHistory.length > 0 && (
+                      <Box sx={{ mt: 1 }}>
+                        <Box display="flex" alignItems="center" justifyContent="space-between">
+                          <Typography variant="subtitle2" color="text.secondary">
+                            Recent Payments:
+                          </Typography>
+                          <IconButton
+                            size="small"
+                            onClick={() => togglePaymentHistory(client.id)}
+                          >
+                            {expandedClientIds[client.id] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                          </IconButton>
+                        </Box>
+                        <Stack spacing={0.5}>
+                          {(expandedClientIds[client.id]
+                            ? [...client.paymentHistory].reverse()
+                            : [...client.paymentHistory].slice(-1).reverse()
+                          ).map((p, idx) => (
+                            <Typography key={idx} variant="body2" color="text.secondary">
+                              {new Date(p.paymentDate).toLocaleDateString()} - {formatINR(p.amountPaid)}
+                              {typeof p.principalPaid !== 'undefined' && typeof p.interestPaid !== 'undefined' && (
+                                <>
+                                  {' '}
+                                  (Principal: {formatINR(p.principalPaid)}, Interest: {formatINR(p.interestPaid)})
+                                </>
+                              )}
+                            </Typography>
+                          ))}
+                        </Stack>
+                      </Box>
+                    )} */}
                   </Stack>
-                  </Box>
-                )}
-                </Stack>
-                {/* Amortization Schedule */}
-              </CardContent>
-              <CardActions sx={{ pt: 0, pb: 2, px: 2 }}>
-                <Button
-                  fullWidth
-                  size="small"
-                  variant="contained"
-                  color="success"
-                  startIcon={<PlusCircle size={18} />}
-                  disabled={disabled}
-                  onClick={() => openRecordPaymentModal(client)}
-                >
-                  Record Payment
-                </Button>
-              </CardActions>
+                  {/* Amortization Schedule */}
+                </CardContent>
+                <CardActions sx={{ pt: 0, pb: 2, px: 2 }}>
+                  <Button
+                    fullWidth
+                    size="small"
+                    variant="contained"
+                    color="success"
+                    startIcon={<PlusCircle size={18} />}
+                    disabled={disabled}
+                    onClick={() => openRecordPaymentModal(client)}
+                  >
+                    Record Payment
+                  </Button>
+                </CardActions>
               </Card>
             );
           })}
@@ -443,7 +411,7 @@ export default function LoanCalculationsPage({ customConfirm }) {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={closeRecordPaymentModal} variant="contained" color="error"  disabled={submitting}>
+          <Button onClick={closeRecordPaymentModal} variant="contained" color="error" disabled={submitting}>
             Cancel
           </Button>
           <Button

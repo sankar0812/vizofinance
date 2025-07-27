@@ -178,41 +178,58 @@ router.post('/', auth, authorize('ADMIN', 'EMPLOYEE'), async (req, res) => {
 // });
 
 // UPDATE a client
-router.put('/:id',auth, authorize('ADMIN'), async (req, res) => {
+// UPDATE a client and their associated user
+router.put('/:id', auth, authorize('ADMIN'), async (req, res) => {
   try {
     const clientId = parseInt(req.params.id);
-    const { paymentHistory, ...clientData } = req.body;
+    const { paymentHistory, email, ...clientData } = req.body;
+
+    const existingClient = await prisma.client.findUnique({
+      where: { id: clientId },
+      include: { user: true }, // include the related user
+    });
+
+    if (!existingClient) {
+      return res.status(404).json({ message: 'Client not found.' });
+    }
+
+    // Update the user (email only here, expand if needed)
+    if (email && email !== existingClient.email) {
+      await prisma.user.update({
+        where: { id: existingClient.userId },
+        data: { email },
+      });
+    }
 
     const updatedClient = await prisma.client.update({
       where: { id: clientId },
       data: {
         ...clientData,
-        paymentHistory: {
-          deleteMany: {}, // Deletes all existing payment history for this client
-          create: paymentHistory.map(ph => ({
-            // Don't include `id` or `clientId` — Prisma sets these
-            paymentDate: ph.paymentDate,
-            amountPaid: ph.amountPaid,
-            principalPaid: ph.principalPaid,
-            interestPaid: ph.interestPaid,
-            remainingBalance: ph.remainingBalance,
-            paymentMonth: ph.paymentMonth,
-            paymentYear: ph.paymentYear
-          }))
-        }
+        email,
+        paymentHistory: paymentHistory
+          ? {
+              deleteMany: {},
+              create: paymentHistory.map(ph => ({
+                paymentDate: ph.paymentDate,
+                amountPaid: ph.amountPaid,
+                principalPaid: ph.principalPaid,
+                interestPaid: ph.interestPaid,
+                remainingBalance: ph.remainingBalance,
+                paymentMonth: ph.paymentMonth,
+                paymentYear: ph.paymentYear,
+              })),
+            }
+          : undefined,
       },
-      include: {
-        paymentHistory: true
-      }
+      include: { paymentHistory: true },
     });
 
     res.json(updatedClient);
   } catch (err) {
-    console.error('Error updating client:', err);
+    console.error('Error updating client and user:', err);
     res.status(400).json({ message: err.message });
   }
 });
-
 
 // DELETE client
 router.delete('/:id',auth, authorize('ADMIN'), async (req, res) => {

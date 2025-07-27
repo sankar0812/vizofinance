@@ -1,76 +1,111 @@
-// pages/ClientPaymentHistory.jsx
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Typography, Stack, Box } from '@mui/material';
-import { formatINR } from '../utils/currency'; // Assuming you have a utility to format currency    
+import {
+  Container,
+  Typography,
+  CircularProgress,
+  Alert,
+  Divider,
+  Paper,
+} from '@mui/material';
+import { formatINR } from '../utils/currency';
+import {
+  Timeline,
+  TimelineItem,
+  TimelineSeparator,
+  TimelineConnector,
+  TimelineContent,
+  TimelineDot,
+} from '@mui/lab';
+import { useAuth } from './auth/AuthContext';
+import { motion } from 'framer-motion';
 
-
-const ClientPaymentHistory = ({ clients }) => {
+export default function ClientPaymentHistory() {
   const { clientId } = useParams();
+  const { token } = useAuth() || {};
+  const [client, setClient] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // If clients prop is not provided, use mock data for testing
-// Remove defaultClients and fetch client data dynamically
-// Example: fetch clients from API or context
-// const clientList = clients; // clients should be passed as a prop from parent or fetched via API
+  const API_BASE_URL = import.meta.env.VITE_APP_BASE_URL;
 
-  const clientList = clients && clients.length > 0 ? clients : defaultClients;
-  const client = clientList.find(c => String(c.id) === String(clientId));
+  useEffect(() => {
+    async function fetchClient() {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/clients/${clientId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!response.ok) throw new Error('Failed to fetch client data');
+        const data = await response.json();
+        setClient(data);
+      } catch (err) {
+        console.error(err);
+        setError(err.message || 'Something went wrong');
+      } finally {
+        setLoading(false);
+      }
+    }
 
-  if (!client) return <Typography>Client not found</Typography>;
+    fetchClient();
+  }, [clientId]);
+
+  if (loading) return <CircularProgress sx={{ mt: 5 }} />;
+  if (error) return <Alert severity="error">{error}</Alert>;
+  if (!client) return <Typography>No client data found.</Typography>;
 
   return (
-    <Box p={2}>
-      <Typography variant="h5" gutterBottom>
-        {client.name} - Full Payment History
+    <Container sx={{ py: 4 }}>
+      <Typography
+        variant="h4"
+        fontWeight={700}
+        color="text.primary"
+        sx={{ mb: 0, pb: 2 }}
+      >
+        Payment History for {client.name}
       </Typography>
-      <Stack spacing={1}>
-        {[...client.paymentHistory].reverse().map((p, idx) => (
-          <Typography key={idx}>
-            {new Date(p.paymentDate).toLocaleDateString()} - {formatINR(p.amountPaid)}{' '}
-            {p.principalPaid !== undefined && p.interestPaid !== undefined && (
-              <> (Principal: {formatINR(p.principalPaid)}, Interest: {formatINR(p.interestPaid)})</>
-            )}
-          </Typography>
-        ))}
-      </Stack>
-    </Box>
+      <Divider sx={{ mb: 3 }} />
+
+      {Array.isArray(client.paymentHistory) && client.paymentHistory.length > 0 ? (
+        <Timeline position="alternate">
+          {[...client.paymentHistory]
+            .sort((a, b) => new Date(b.paymentDate) - new Date(a.paymentDate))
+            .map((p, index) => (
+              <TimelineItem key={index}>
+                <TimelineSeparator>
+                  <TimelineDot color="primary" />
+                  {index < client.paymentHistory.length - 1 && <TimelineConnector />}
+                </TimelineSeparator>
+                <TimelineContent>
+                  <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                    viewport={{ once: true }}
+                  >
+                    <Paper elevation={3} sx={{ p: 2 }}>
+                      <Typography variant="subtitle1">
+                        {new Date(p.paymentDate).toLocaleDateString()}
+                      </Typography>
+                      <Typography variant="body2">
+                        Amount Paid: {formatINR(p.amountPaid)}
+                      </Typography>
+                      <Typography variant="body2">
+                        Principal: {formatINR(p.principalPaid)}
+                      </Typography>
+                      <Typography variant="body2">
+                        Interest: {formatINR(p.interestPaid)}
+                      </Typography>
+                    </Paper>
+                  </motion.div>
+                </TimelineContent>
+              </TimelineItem>
+            ))}
+        </Timeline>
+      ) : (
+        <Typography>No payments made yet.</Typography>
+      )}
+    </Container>
   );
-};
-
-export default ClientPaymentHistory;
-
-
-// import React from 'react';
-// import { useParams } from 'react-router-dom';
-// import { Typography, Stack, Box } from '@mui/material';
-// import { formatINR } from '../utils/currency';
-// import { useClients } from '../utils/ClientsContext';
-
-// const ClientPaymentHistory = () => {
-//   const { clientId } = useParams();
-//   const { clients } = useClients();
-
-//   const client = clients.find(c => String(c.id) === String(clientId));
-
-//   if (!client) return <Typography>Client not found</Typography>;
-
-//   return (
-//     <Box p={2}>
-//       <Typography variant="h5" gutterBottom>
-//         {client.name} - Full Payment History
-//       </Typography>
-//       <Stack spacing={1}>
-//         {[...client.paymentHistory].reverse().map((p, idx) => (
-//           <Typography key={idx}>
-//             {new Date(p.paymentDate).toLocaleDateString()} - {formatINR(p.amountPaid)}{' '}
-//             {p.principalPaid !== undefined && p.interestPaid !== undefined && (
-//               <> (Principal: {formatINR(p.principalPaid)}, Interest: {formatINR(p.interestPaid)})</>
-//             )}
-//           </Typography>
-//         ))}
-//       </Stack>
-//     </Box>
-//   );
-// };
-
-// export default ClientPaymentHistory;
+}

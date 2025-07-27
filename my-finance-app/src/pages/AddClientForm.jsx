@@ -110,264 +110,266 @@ const AddClientForm = () => {
       <DialogTitle>{clientToEdit ? 'Edit Client' : 'Add New Client'}</DialogTitle>
       <DialogContent dividers>
         <form id="add-client-form" onSubmit={handleSubmit}>
-          <Grid container spacing={2} alignItems="center" sx={{ m: 2 }}>
+          <div className="container">
             {/* Row 1 */}
-            <Grid item xs={12} md={12} lg={12} >
-              <TextField
-                required
-                fullWidth
-                size="small"
-                label="Client Name"
-                name="name"
-                placeholder='Enter client name'
-                value={client.name}
-                onChange={handleChange}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <User size={16} />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <TextField
-                required
-                fullWidth
-                size="small"
-                type="email"
-                label="Email"
-                name="email"
-                placeholder='Enter email address'
-                value={client.email}
-                onChange={handleChange}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Mail size={16} />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                size="small"
-                placeholder='Enter phone number'
-                label="Phone"
-                name="phone"
-                value={client.phone}
-                onChange={handleChange}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Phone size={16} />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-          </Grid>
-          <Grid container spacing={2} alignItems="center" sx={{ m: 2 }}>
-            {/* Row 2 */}
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Address"
-                name="address"
-                placeholder='Enter address'
-                value={client.address}
-                onChange={handleChange}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <MapPin size={16} />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <Box sx={{ width: '93%' }}>
-              <LocalizationProvider dateAdapter={AdapterDateFns}>
-                <DatePicker
-                  label="Joined Date"
-                  value={client.joinedDate ? new Date(client.joinedDate) : null}
-                  // sx={{ width: 300 }}
-                  onChange={(newValue) =>
-                    handleChange({
-                      target: { name: 'joinedDate', value: newValue },
-                    })
-                  }
-                  slotProps={{
-                    textField: {
-                      size: 'small',
-                      name: 'joinedDate',
-                      InputProps: {
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <CalendarIcon size={16} />
-                          </InputAdornment>
-                        ),
-                      },
-                    },
+            <div className="row g-3">
+              <div className="col-md-12">
+                <TextField
+                  required
+                  fullWidth
+                  size="small"
+                  label="Client Name"
+                  name="name"
+                  value={client.name}
+                  onChange={handleChange}
+                  placeholder="Enter client name"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <User size={16} />
+                      </InputAdornment>
+                    ),
                   }}
                 />
-              </LocalizationProvider>
-              </ Box>
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <Autocomplete
-                disablePortal
-                size='small'
-                options={statusOptions}
-                sx={{ width: "185%" }}
-                value={client.status || 'Active'}
-                onChange={(event, newValue) =>
-                  handleChange({ target: { name: 'status', value: newValue } })
-                }
-                renderInput={(params) => <TextField {...params} label="Status" InputProps={{
-                  ...params.InputProps,
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Briefcase size={16} />
-                    </InputAdornment>
-                  ),
-                }} />}
-              />
-            </Grid>
-          </ Grid>
-          <Grid container spacing={2} alignItems="center" sx={{ m: 2 }}>
-            {/* Row 3 */}
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                size="small"
-                type="number"
-                label="Revenue"
-                name="revenue"
-                value={client.revenue}
-                onChange={handleChange}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <DollarSign size={16} />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                size="small"
-                type="number"
-                label="Transactions"
-                name="transactions"
-                value={client.transactions}
-                onChange={handleChange}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <FileText size={16} />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                size="small"
-                type="number"
-                label="Loan Amount"
-                name="loanAmount"
-                value={client.loanAmount}
-                onChange={handleChange}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <DollarSign size={16} />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-          </ Grid>
-          <Grid container spacing={2} alignItems="center" sx={{ m: 2 }}>
-            {/* Row 4 */}
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                size="small"
-                type="number"
-                step="0.01"
-                label="Interest Rate (%)"
-                name="interestRate"
-                value={client.interestRate}
-                onChange={handleChange}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Percent size={16} />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                size="small"
-                type="number"
-                label="Loan Term (Months)"
-                name="loanTermMonths"
-                value={client.loanTermMonths}
-                onChange={handleChange}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Clock size={16} />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-            {/* {currentUser?.role === 'ADMIN' && ( */}
-            <Grid item xs={12} md={4}>
-              <Autocomplete
-              fullWidth
-                disablePortal
-                size='small'
-                options={roles}
-                sx={{ width: "185%" }}
-                value={client.role || 'USER'}
-                onChange={(event, newValue) =>
-                  handleChange({ target: { name: 'role', value: newValue } })
-                }
-                renderInput={(params) => <TextField {...params} label="Role" InputProps={{
-                  ...params.InputProps,
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Briefcase size={16} />
-                    </InputAdornment>
-                  ),
-                }} />}
-              />
-            </Grid>
-            {/* )} */}
-          </Grid>
+              </div>
+              <div className="col-md-4">
+                <TextField
+                  required
+                  fullWidth
+                  size="small"
+                  label="Email"
+                  name="email"
+                  value={client.email}
+                  onChange={handleChange}
+                  placeholder="Enter email"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Mail size={16} />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </div>
+              <div className="col-md-4">
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Phone"
+                  name="phone"
+                  value={client.phone}
+                  onChange={handleChange}
+                  placeholder="Enter phone"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Phone size={16} />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </div>
+              <div className="col-md-4">
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Address"
+                  name="address"
+                  value={client.address}
+                  onChange={handleChange}
+                  placeholder="Enter address"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <MapPin size={16} />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </div>
+
+              <div className="col-md-4">
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                  <DatePicker
+                    label="Joined Date"
+                    value={client.joinedDate ? new Date(client.joinedDate) : null}
+                    onChange={(newValue) =>
+                      handleChange({ target: { name: 'joinedDate', value: newValue } })
+                    }
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        size: 'small',
+                        name: 'joinedDate',
+                        InputProps: {
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <CalendarIcon size={16} />
+                            </InputAdornment>
+                          ),
+                        },
+                      },
+                    }}
+                  />
+                </LocalizationProvider>
+              </div>
+
+              <div className="col-md-4">
+                <TextField
+                  select
+                  fullWidth
+                  size="small"
+                  label="Status"
+                  name="status"
+                  value={client.status || 'Active'}
+                  onChange={handleChange}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Briefcase size={16} />
+                      </InputAdornment>
+                    ),
+                  }}
+                >
+                  {statusOptions.map((option) => (
+                    <MenuItem key={option} value={option}>
+                      {option}
+                    </MenuItem>
+                  ))}
+                </TextField>
+
+              </div>
+
+              <div className="col-md-4">
+                <TextField
+                  fullWidth
+                  size="small"
+                  type="number"
+                  label="Revenue"
+                  name="revenue"
+                  value={client.revenue}
+                  onChange={handleChange}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <DollarSign size={16} />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </div>
+              <div className="col-md-4">
+                <TextField
+                  fullWidth
+                  size="small"
+                  type="number"
+                  label="Transactions"
+                  name="transactions"
+                  value={client.transactions}
+                  onChange={handleChange}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <FileText size={16} />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </div>
+              <div className="col-md-4">
+                <TextField
+                  fullWidth
+                  size="small"
+                  type="number"
+                  label="Loan Amount"
+                  name="loanAmount"
+                  value={client.loanAmount}
+                  onChange={handleChange}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <DollarSign size={16} />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </div>
+              <div className="col-md-4">
+                <TextField
+                  fullWidth
+                  size="small"
+                  type="number"
+                  label="Interest Rate (%)"
+                  name="interestRate"
+                  value={client.interestRate}
+                  onChange={handleChange}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Percent size={16} />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </div>
+              <div className="col-md-4">
+                <TextField
+                  fullWidth
+                  size="small"
+                  type="number"
+                  label="Loan Term (Months)"
+                  name="loanTermMonths"
+                  value={client.loanTermMonths}
+                  onChange={handleChange}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Clock size={16} />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </div>
+              <div className="col-md-4">
+                <TextField
+                  select
+                  fullWidth
+                  size="small"
+                  label="Role"
+                  name="role"
+                  value={client.role || 'USER'}
+                  onChange={handleChange}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Briefcase size={16} />
+                      </InputAdornment>
+                    ),
+                  }}
+                >
+                  {roles.map((role) => (
+                    <MenuItem key={role} value={role}>
+                      {role}
+                    </MenuItem>
+                  ))}
+                </TextField>
+
+              </div>
+            </div>
+          </div>
         </form>
       </DialogContent>
       <DialogActions>
-        <Button sx={{ m: 2 }} onClick={() => navigate('/dashboard/clients')} color="inherit">Cancel</Button>
-        <Button sx={{ m: 2 }} type="submit" form="add-client-form" variant="contained">Save Client</Button>
+        <Button sx={{ m: 2 }} onClick={() => navigate('/dashboard/clients')} color="inherit">
+          Cancel
+        </Button>
+        <Button sx={{ m: 2 }} type="submit" form="add-client-form" variant="contained">
+          Save Client
+        </Button>
       </DialogActions>
     </Dialog>
   );
+
 };
 
 export default AddClientForm;

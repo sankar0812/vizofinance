@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import {
   Box, Stack, Typography, Button, TextField, InputAdornment, Paper,
   TableContainer, Table, TableHead, TableRow, TableCell, TableBody,
-  IconButton, useMediaQuery, Tooltip, Chip, Dialog, DialogActions, DialogTitle
+  IconButton, useMediaQuery, Tooltip, Chip, Dialog, DialogActions, DialogTitle, Skeleton
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import {
@@ -14,6 +14,7 @@ import { useClients } from '../utils/hooks/useClients';
 import { getClientId } from '../utils/getClientId';
 import { useAuth } from './auth/AuthContext';
 import UnauthorizedError from './exception/unauthorized';
+import { useQueryClient } from '@tanstack/react-query';
 
 const Clients = () => {
   const { token, user } = useAuth() || {};
@@ -28,8 +29,8 @@ const Clients = () => {
   const [clientToDelete, setClientToDelete] = useState(null);
 
   const { data: clients, loading, error, deleteClient } = useClients();
+  const queryClient = useQueryClient();
 
-  // --- filter ---
   const filteredClients = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
     if (!term) return clients;
@@ -39,7 +40,6 @@ const Clients = () => {
     );
   }, [clients, searchTerm]);
 
-  // --- sort ---
   const sortedClients = useMemo(() => {
     if (!sortConfig.key) return filteredClients;
     return [...filteredClients].sort((a, b) => {
@@ -71,15 +71,13 @@ const Clients = () => {
       : <ChevronDown size={16} />;
   };
 
-  // --- actions ---
-  const handleAddClient = () => navigate('/dashboard/clients/new');
-  const handleViewClient = (client) => {
-    navigate(`/dashboard/clients/${client._id || client.id}`);
+  const handleAddClient = async () => {
+    navigate('/dashboard/clients/new');
+    queryClient.invalidateQueries(['clients']); // ensure refresh on return
   };
 
-  const handleEditClient = (client) => {
-    navigate(`/dashboard/clients/${client._id || client.id}/edit`);
-  };
+  const handleViewClient = (client) => navigate(`/dashboard/clients/${client._id || client.id}`);
+  const handleEditClient = (client) => navigate(`/dashboard/clients/${client._id || client.id}/edit`);
 
   const handleDeleteClick = (client) => {
     setClientToDelete(client);
@@ -88,43 +86,23 @@ const Clients = () => {
 
   const confirmDeleteClient = async () => {
     if (clientToDelete) {
-      deleteClient(clientToDelete._id || clientToDelete.id);
+      await deleteClient(clientToDelete._id || clientToDelete.id);
       setDeleteDialogOpen(false);
       setClientToDelete(null);
+      queryClient.invalidateQueries(['clients']); // refetch after delete
     }
   };
 
   const statusColor = (status) => {
     switch ((status || '').toLowerCase()) {
-      case 'active':
-        return { bg: '#86efac', text: '#065f46' }; 
-      case 'inactive':
-        return { bg: '#fca5a5', text: '#7f1d1d' };
-      case 'lead':
-        return { bg: '#fde68a', text: '#78350f' };
-      default:
-        return { bg: '#cbd5e1', text: '#1e293b' };
+      case 'active': return { bg: '#86efac', text: '#065f46' };
+      case 'inactive': return { bg: '#fca5a5', text: '#7f1d1d' };
+      case 'lead': return { bg: '#fde68a', text: '#78350f' };
+      default: return { bg: '#cbd5e1', text: '#1e293b' };
     }
   };
 
-  if (loading && isAdmin) {
-    return (
-      <Box p={4}>
-        <Typography>Loading clients...</Typography>
-      </Box>
-    );
-  }
-  if (error && isAdmin) {
-    return (
-      <Box p={4}>
-        <Typography color="error">Failed to load clients: {error.message}</Typography>
-      </Box>
-    );
-  }
-
-  if(!isAdmin){
-    return <UnauthorizedError />;
-  }
+  if (!isAdmin) return <UnauthorizedError />;
 
   return (
     <Box sx={{ width: '100%', pb: 6 }}>
@@ -147,7 +125,7 @@ const Clients = () => {
           fullWidth
           placeholder="Search clients by name or email..."
           value={searchTerm}
-          size='small'
+          size="small"
           onChange={(e) => setSearchTerm(e.target.value)}
           InputProps={{
             startAdornment: (
@@ -159,8 +137,15 @@ const Clients = () => {
         />
       </Box>
 
+      {/* Table & Loading */}
       <Paper elevation={3}>
-        {sortedClients?.length === 0 ? (
+        {loading ? (
+          <Box px={3} py={4}>
+            {[...Array(5)].map((_, i) => (
+              <Skeleton key={i} variant="rectangular" height={40} sx={{ mb: 1 }} />
+            ))}
+          </Box>
+        ) : sortedClients?.length === 0 ? (
           <Box py={10} textAlign="center">
             <Typography variant="body1" color="text.secondary">
               No clients found. Try adding a new one!

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   TextField,
   Button,
@@ -17,6 +17,12 @@ import { useAuth } from './AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { useTheme } from '@mui/material/styles'
 
+const preloadImage = (src) => {
+  const img = new Image()
+  img.src = src
+}
+preloadImage(Logo)
+preloadImage(Illustration)
 
 function Login() {
   const { login } = useAuth()
@@ -33,7 +39,6 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
-
     if (!email || !password) {
       setError('Email and password are required.')
       return
@@ -59,29 +64,25 @@ function Login() {
   }
 
   return (
-    <Grid
-      container
-      sx={{ height: '100vh' }}
-      alignItems="center"
-      justifyContent="center"
-    >
-      {/* Illustration Section */}
+    <Grid container sx={{ height: '100vh' }} alignItems="center" justifyContent="center">
+      {/* Image Section */}
       {!isSmallScreen && (
         <Grid
           item
           md={6}
           sx={{
-            backgroundColor: '#f5f5f5',
+            background: 'linear-gradient(to bottom right, #f0f4f8, #d9e2ec)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            px: 4, 
+            px: 4,
           }}
         >
           <Box sx={{ maxWidth: 500, width: '100%' }}>
             <img
               src={Illustration}
               alt="Illustration"
+              loading="eager"
               style={{ width: '100%', maxWidth: '500px' }}
             />
           </Box>
@@ -97,33 +98,32 @@ function Login() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          px: 4,
+          px: 3,
           backgroundColor: isSmallScreen ? '#fff' : '#f9f9f9',
         }}
       >
         <Card
-          elevation={isSmallScreen ? 0 : 6}
+          elevation={isSmallScreen ? 0 : 10}
           sx={{
-            maxWidth: 400,
+            maxWidth: 420,
             width: '100%',
-            p: 4,
+            p: 5,
             borderRadius: 3,
             backgroundColor: '#fff',
             mx: 'auto',
           }}
         >
           <Box>
-            <img
-              src={Logo}
-              alt="Company Logo"
-              style={{ width: '80px', margin: '0 auto 10px auto', display: 'block' }}
-            />
-            <Typography variant="h5" align="center" sx={{ fontWeight: 600, mb: 1 }}>
-              Finance Login
-            </Typography>
-            <Typography variant="body2" align="center" sx={{ color: '#666', mb: 3 }}>
-              Welcome to Vizo Finance
-            </Typography>
+            <Box sx={{ textAlign: 'center', mb: 3 }}>
+              <img src={Logo} alt="Company Logo" style={{ width: '70px' }} />
+              <Typography variant="h5" fontWeight={700} sx={{ mt: 1 }}>
+                Finance Login
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Welcome to Vizo Finance
+              </Typography>
+            </Box>
+
             <form onSubmit={handleSubmit}>
               <TextField
                 label="Email"
@@ -141,25 +141,28 @@ function Login() {
                 variant="outlined"
                 fullWidth
                 required
-                sx={{ mb: 3 }}
+                sx={{ mb: 2 }}
                 size="small"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
-                      <IconButton
-                        onClick={() => setShowPassword(!showPassword)}
-                        edge="end"
-                      >
+                      <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
                         {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                       </IconButton>
                     </InputAdornment>
                   ),
                 }}
               />
-              {error && <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>}
-              <Button type="submit" variant="contained" color="primary" fullWidth>
+
+              {error && (
+                <Typography color="error" variant="body2" sx={{ mb: 2 }}>
+                  {error}
+                </Typography>
+              )}
+
+              <Button type="submit" variant="contained" color="primary" fullWidth sx={{ mt: 1 }}>
                 Login
               </Button>
             </form>

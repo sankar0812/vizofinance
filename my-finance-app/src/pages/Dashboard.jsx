@@ -15,66 +15,63 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  IconButton,
+  useTheme,
+  useMediaQuery,
+  Card,
+  CardContent
 } from '@mui/material'
-import { Users, IndianRupee, TrendingUp, User as UserIcon, Download, FileText, Edit, Trash } from 'lucide-react'
+import {
+  Users,
+  IndianRupee,
+  TrendingUp,
+  User as UserIcon,
+  Download,
+  FileText
+} from 'lucide-react'
 
 import { useClients } from '../utils/hooks/useClients'
 import { formatINR } from '../utils/currency'
 import { exportClientsToCSV } from '../utils/export'
-import { StatCard } from '../components/StatCard'
 import { RevenueLines } from '../components/RevenueLines'
 import { ClientsPie } from '../components/ClientsPie'
 import { useAuth } from './auth/AuthContext'
 
 export default function DashboardOverview() {
-  const { token, user } = useAuth() || {};
-  const isAdmin = user?.role === 'ADMIN';
-  const isUser = user?.role === 'USER';
-  const { data: userData } = useAuth();
+  const { token, user } = useAuth() || {}
+  const isAdmin = user?.role === 'ADMIN'
+  const isUser = user?.role === 'USER'
 
-  
-  const { data: clients, loading, error, refetch, deleteClient } = useClients(isAdmin);
+  const {
+    data: clients,
+    loading,
+    error,
+    refetch,
+    deleteClient
+  } = useClients(isAdmin)
 
-  // const {data: userClients, loading: userLoading, error: userError} = useClients(isUser, token);  
-
-  // ---- summary metrics --------------------------------------------------
   const totalClients = clients.length
   const totalRevenue = clients.reduce((sum, c) => sum + (c.revenue || 0), 0)
   const avgRevenuePerClient = totalClients > 0 ? totalRevenue / totalClients : 0
   const activeClients = clients.filter((c) => c.status === 'Active').length
-
-  // const loanAmount = clients.reduce((sum, c) => sum + (c.loanAmount || 0), 0)
-  const userLoanAmount = user?.loanAmount || 0;
+  const userLoanAmount = user?.loanAmount || 0
   const totalPaid = clients.reduce((sum, c) => sum + (c.totalPaid || 0), 0)
   const totalDue = clients.reduce((sum, c) => sum + (c.totalDue || 0), 0)
   const totalInterest = clients.reduce((sum, c) => sum + (c.totalInterest || 0), 0)
-
-  // ---- revenue data for chart -------------------------------------------
-  // Assuming clients have a 'joinedDate' and 'revenue' field 
-  // Default values in case user is null
-// const userLoanAmount = user?.loanAmount || 0;
-// const totalPaid = user?.totalPaid || 0;
-// const totalDue = user?.totalDue || 0;
-// const totalInterest = user?.totalInterest || 0;
-
-    
 
   const revenueData = useMemo(() => {
     return clients
       .filter((c) => c.joinedDate && !isNaN(new Date(c.joinedDate)))
       .map((c) => {
-        const d = new Date(c.joinedDate);
-        const name = d.toLocaleString('en-US', { month: 'short', year: 'numeric' });
+        const d = new Date(c.joinedDate)
+        const name = d.toLocaleString('en-US', { month: 'short', year: 'numeric' })
         return {
           name,
           actual: c.revenue || 0,
           projected: (c.revenue || 0) * 1.1,
-        };
-      });
-  }, [clients]);
+        }
+      })
+  }, [clients])
 
-  // ---- client status distribution --------------------------------------
   const clientStatusData = useMemo(() => {
     const counts = clients.reduce((acc, c) => {
       acc[c.status] = (acc[c.status] || 0) + 1
@@ -83,7 +80,6 @@ export default function DashboardOverview() {
     return Object.entries(counts).map(([name, value]) => ({ name, value }))
   }, [clients])
 
-  // ---- export handlers --------------------------------------------------
   const handleExportCSV = () => exportClientsToCSV(clients)
 
   const handleExportPDF = async () => {
@@ -94,40 +90,55 @@ export default function DashboardOverview() {
     doc.setFontSize(11)
     doc.text(`Total Clients: ${totalClients}`, 14, 35)
     doc.text(`Total Revenue: ${formatINR(totalRevenue)}`, 14, 42)
-    doc.text(`Avg Revenue/Client: ${formatINR(avgRevenuePerClient)}`, 14, 49)
+    doc.text(`Avg Revenue: ${formatINR(avgRevenuePerClient)}`, 14, 49)
     doc.text(`Active Clients: ${activeClients}`, 14, 56)
     doc.save('finance-dashboard.pdf')
   }
 
-  // ---- loading / error states ------------------------------------------
-  if (loading && isAdmin) {
-    return (
-      <Container maxWidth="lg">
-        <Skeleton variant="text" height={48} sx={{ mb: 2 }} />
-        <Skeleton variant="rounded" height={120} sx={{ mb: 2 }} />
-        <Skeleton variant="rounded" height={320} sx={{ mb: 2 }} />
-        <Skeleton variant="rounded" height={320} sx={{ mb: 2 }} />
-      </Container>
-    )
-  }
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
 
-  if (error && isAdmin) {
-    return (
-      <Container maxWidth="lg">
-        <Alert severity="error" sx={{ mb: 2 }}>
-          Failed to load clients. {String(error)}
-        </Alert>
-        <Button variant="contained" onClick={refetch}>
-          Retry
-        </Button>
-      </Container>
-    )
-  }
+  const renderCard = (label, value, icon) => (
+    <Box
+      sx={{
+        width: {
+          xs: '100%',
+          sm: '48%',
+          md: '23%',
+        },
+      }}
+    >
+      <Card
+        sx={{
+          height: 120,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          backgroundColor: '#f5f5f5',
+          boxShadow: 2,
+          p: 2,
+        }}
+      >
+        <Box>
+          <Typography variant="subtitle2" sx={{ color: 'text.secondary' }}>
+            {label}
+          </Typography>
+          <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+            {value}
+          </Typography>
+        </Box>
+        <Box sx={{ color: 'text.secondary' }}>
+          {icon}
+        </Box>
+      </Card>
+    </Box>
+  )
+
 
   return (
     <Box sx={{ width: '100%', pb: 6 }}>
       {/* Dashboard Header */}
-      <Box sx={{ mb: 4 }}>
+      <Box sx={{ mb: 2 }}>
         <Typography variant="h4" fontWeight={700} gutterBottom>
           Dashboard Overview
         </Typography>
@@ -136,102 +147,92 @@ export default function DashboardOverview() {
         </Typography>
       </Box>
 
-      {user?.role === 'ADMIN' ? (
+      {isAdmin ? (
         <>
-          {/* State Cards */}
-          <Grid
-            container
-            spacing={2}
-            sx={{ mb: 4, justifyContent: 'space-between', alignItems: 'stretch' }}
-          >
-            <Grid item xs={12} sm={6} md={3} sx={{ display: 'flex' }}>
-              <StatCard
-                label="Total Clients"
-                value={totalClients.toLocaleString()}
-                icon={<Users size={20} />}
-                color="primary.main"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3} sx={{ display: 'flex' }}>
-              <StatCard
-                label="Total Revenue"
-                value={formatINR(totalRevenue)}
-                icon={<IndianRupee size={20} />}
-                color="success.main"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3} sx={{ display: 'flex' }}>
-              <StatCard
-                label="Avg. Revenue/Client"
-                value={formatINR(avgRevenuePerClient)}
-                icon={<TrendingUp size={20} />}
-                color="secondary.main"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3} sx={{ display: 'flex' }}>
-              <StatCard
-                label="Active Clients"
-                value={activeClients.toLocaleString()}
-                icon={<UserIcon size={20} />}
-                color="warning.main"
-              />
-            </Grid>
-          </Grid>
+          {/* Custom Styled Stat Cards */}
+          <Box display="flex" flexWrap="wrap" justifyContent="space-between" gap={2} p={0} mb={4}>
+            {renderCard('Total Clients', totalClients.toLocaleString(), <Users size={20} />)}
+            {renderCard('Total Revenue', formatINR(totalRevenue), <IndianRupee size={20} />)}
+            {renderCard('Avg. Revenue', formatINR(avgRevenuePerClient), <TrendingUp size={20} />)}
+            {renderCard('Active Clients', activeClients.toLocaleString(), <UserIcon size={20} />)}
+          </Box>
 
-          {/* Charts Section */}
-          <Grid container spacing={2} sx={{ mb: 4, width: '100%', display: 'flex', justifyContent: 'space-between' }}>
-            <Grid item xs={12} md={6}>
-              <Paper elevation={1} sx={{ p: 3, height: '100%', width: '100%' }}>
+
+          {/* Charts */}
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mb: 4 }}>
+            <Box sx={{ flex: { xs: '100%', md: '48%' } }}>
+              <Paper elevation={1} sx={{ p: 3, height: '100%' }}>
                 <Typography variant="subtitle1" gutterBottom>
                   Revenue Over Time
                 </Typography>
                 <RevenueLines data={revenueData} />
               </Paper>
-            </Grid>
-            <Grid item xs={12} md={6}>
+            </Box>
+
+            <Box sx={{ flex: { xs: '100%', md: '48%' } }}>
               <Paper elevation={1} sx={{ p: 3, height: '100%' }}>
                 <Typography variant="subtitle1" gutterBottom>
                   Client Status Distribution
                 </Typography>
                 <ClientsPie data={clientStatusData} />
               </Paper>
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
+
 
           {/* Clients Table */}
           <Paper elevation={1} sx={{ p: 3, mb: 4 }}>
             <Typography variant="h6" fontWeight="bold" gutterBottom>
               Clients
             </Typography>
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Name</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell>Revenue</TableCell>
-                    <TableCell>Joined Date</TableCell>
-                    <TableCell>Total Amount</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {clients.map((client) => (
-                    <TableRow key={client.id}>
-                      <TableCell>{client.name}</TableCell>
-                      <TableCell>{client.status}</TableCell>
-                      <TableCell>{formatINR(client.revenue)}</TableCell>
-                      <TableCell>
-                        {client.joinedDate ? new Date(client.joinedDate).toLocaleDateString() : '-'}
-                      </TableCell>
-                      <TableCell>{formatINR(client.loanAmount)}</TableCell>
+
+            {loading ? (
+              <Skeleton variant="rounded" height={200} />
+            ) : error ? (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                Failed to load clients. {String(error)}
+                <Button
+                  variant="outlined"
+                  size="small"
+                  sx={{ ml: 2 }}
+                  onClick={refetch}
+                >
+                  Retry
+                </Button>
+              </Alert>
+            ) : (
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Name</TableCell>
+                      <TableCell>Status</TableCell>
+                      <TableCell>Revenue</TableCell>
+                      <TableCell>Joined Date</TableCell>
+                      <TableCell>Total Amount</TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                  </TableHead>
+                  <TableBody>
+                    {clients.map((client) => (
+                      <TableRow key={client.id}>
+                        <TableCell>{client.name}</TableCell>
+                        <TableCell>{client.status}</TableCell>
+                        <TableCell>{formatINR(client.revenue)}</TableCell>
+                        <TableCell>
+                          {client.joinedDate
+                            ? new Date(client.joinedDate).toLocaleDateString()
+                            : '-'}
+                        </TableCell>
+                        <TableCell>{formatINR(client.loanAmount)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
           </Paper>
 
-          {/* Export Buttons */}
+          {/* Export Section */}
           <Paper elevation={1} sx={{ p: 3 }}>
             <Stack
               direction={{ xs: 'column', sm: 'row' }}
@@ -263,53 +264,23 @@ export default function DashboardOverview() {
           </Paper>
         </>
       ) : (
-        <Box sx={{ mb: 6}}>
+        <Box sx={{ mb: 6 }}>
           <Typography variant="h5" fontWeight={600}>
             Welcome, {user?.email} 👋
           </Typography>
           <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-          {/* State Cards */}
-          <Grid
-            container
-            spacing={2}
-            sx={{ mb: 4, justifyContent: 'space-between', alignItems: 'stretch' }}
-          >
-            <Grid item xs={12} sm={6} md={3} sx={{ display: 'flex' }}>
-              <StatCard
-                label="Loan Amount"
-                value={formatINR(user?.loanAmount || 0)}
-                icon={<Users size={20} />}    
-                color={"user.main"} 
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3} sx={{ display: 'flex' }}>
-              <StatCard
-                label="Total Paid"
-                value={formatINR(totalPaid)}
-                icon={<IndianRupee size={20} />}
-                color="success.main"
-              />
-              </Grid>
-            <Grid item xs={12} sm={6} md={3} sx={{ display: 'flex' }}>
-              <StatCard
-                label="Total Due"
-                value={formatINR(totalDue)}
-                icon={<TrendingUp size={20} />}
-                color="secondary.main"   
-              />
-              </Grid>
-            <Grid item xs={12} sm={6} md={3} sx={{ display: 'flex' }}>
-              <StatCard 
-                label="Total Interest"
-                value={formatINR(totalInterest)}
-                icon={<UserIcon size={20} />}
-                color="warning.main"  
-              />
-              </Grid>    
-          </Grid>
+            Here’s your loan summary
           </Typography>
+
+          <Box display="flex" flexWrap="wrap" justifyContent="space-between" gap={2} p={1} mb={4}>
+            {renderCard('Loan Amount', formatINR(user?.loanAmount || 0), <Users size={20} />)}
+            {renderCard('Total Paid', formatINR(totalPaid), <IndianRupee size={20} />)}
+            {renderCard('Total Due', formatINR(totalDue), <TrendingUp size={20} />)}
+            {renderCard('Total Interest', formatINR(totalInterest), <UserIcon size={20} />)}
+          </Box>
+
         </Box>
       )}
     </Box>
-  );
+  )
 }

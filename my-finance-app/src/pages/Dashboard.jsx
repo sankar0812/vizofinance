@@ -35,6 +35,7 @@ import { exportClientsToCSV } from '../utils/export'
 import { RevenueLines } from '../components/RevenueLines'
 import { ClientsPie } from '../components/ClientsPie'
 import { useAuth } from './auth/AuthContext'
+import { is } from 'date-fns/locale'
 
 export default function DashboardOverview() {
   const { token, user } = useAuth() || {}
@@ -53,6 +54,7 @@ export default function DashboardOverview() {
   const totalRevenue = clients.reduce((sum, c) => sum + (c.revenue || 0), 0)
   const avgRevenuePerClient = totalClients > 0 ? totalRevenue / totalClients : 0
   const activeClients = clients.filter((c) => c.status === 'Active').length
+
   const userLoanAmount = user?.loanAmount || 0
   const totalPaid = clients.reduce((sum, c) => sum + (c.totalPaid || 0), 0)
   const totalDue = clients.reduce((sum, c) => sum + (c.totalDue || 0), 0)
@@ -114,8 +116,9 @@ export default function DashboardOverview() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          backgroundColor: '#f5f5f5',
-          boxShadow: 2,
+          backgroundColor: '#ffffffff',
+          boxShadow: 5,
+          borderRadius: 2,
           p: 2,
         }}
       >
@@ -264,7 +267,7 @@ export default function DashboardOverview() {
           </Paper>
         </>
       ) : (
-        <Box sx={{ mb: 6 }}>
+         <Box sx={{ mb: 6 }}>
           <Typography variant="h5" fontWeight={600}>
             Welcome, {user?.email} 👋
           </Typography>
@@ -273,14 +276,14 @@ export default function DashboardOverview() {
           </Typography>
 
           <Box display="flex" flexWrap="wrap" justifyContent="space-between" gap={2} p={1} mb={4}>
-            {renderCard('Loan Amount', formatINR(user?.loanAmount || 0), <Users size={20} />)}
+            {renderCard('Loan Amount', formatINR(userLoanAmount || 0), <Users size={20} />)}
             {renderCard('Total Paid', formatINR(totalPaid), <IndianRupee size={20} />)}
             {renderCard('Total Due', formatINR(totalDue), <TrendingUp size={20} />)}
             {renderCard('Total Interest', formatINR(totalInterest), <UserIcon size={20} />)}
           </Box>
-
         </Box>
-      )}
+
+    )}
     </Box>
   )
 }

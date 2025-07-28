@@ -16,6 +16,8 @@ model User {
   updatedAt DateTime @updatedAt
 
   client Client? @relation
+
+  assignedClients Client[] @relation("AssignedEmployee")
 }
 
 enum Role {
@@ -41,6 +43,9 @@ model Client {
   paymentHistory               PaymentHistory[]
   createdAt                    DateTime         @default(now())
   updatedAt                    DateTime         @updatedAt
+
+  assignedTo  Int?      // NEW: ID of assigned employee
+  employee    User?     @relation("AssignedEmployee", fields: [assignedTo], references: [id])
 
   user   User @relation(fields: [userId], references: [id])
   userId Int  @unique

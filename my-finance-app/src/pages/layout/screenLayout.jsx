@@ -18,6 +18,7 @@ import {
   Stack,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import Logo from '../../assets/fin.png';
 import {
   Menu,
   LayoutDashboard,
@@ -33,6 +34,7 @@ const navItems = [
   { label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={18} /> },
   { label: 'Clients', path: '/dashboard/clients', icon: <UsersIcon size={18} /> },
   { label: 'Loan Payments', path: '/dashboard/loans', icon: <Wallet size={18} /> },
+  { label: 'Assign Clients', path: '/dashboard/assign', icon: <UsersIcon size={18} /> },
 ];
 
 function DrawerContent({ locationPath, onNavClick, user, logout }) {
@@ -47,7 +49,7 @@ function DrawerContent({ locationPath, onNavClick, user, logout }) {
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Branding */}
       <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Avatar sx={{ bgcolor: 'primary.main', width: 32, height: 32 }}>F</Avatar>
+        <Avatar sx={{ bgcolor: 'primary.main', width: 32, height: 32 }}><img src={Logo} alt="Company Logo" style={{ width: '100%' }} /></Avatar>
         <Typography variant="h6" noWrap>
           FinanceApp
         </Typography>

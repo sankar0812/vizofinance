@@ -8,6 +8,10 @@ import ClientDetail from './pages/ClientDetail';
 import LoanCalculationsPage from './pages/LoanCalculationsPage';
 import ClientPaymentHistory from './pages/ClientPaymentHistory';
 import { useAuth } from './pages/auth/AuthContext';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import AssignClients from './pages/AssignClients';
+
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuth();
@@ -16,29 +20,33 @@ function ProtectedRoute({ children }) {
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Navigate to="/login" replace />} />
-      <Route path="/login" element={<Login />} />
+    <>
+      <ToastContainer position="top-right" autoClose={3000} />
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/login" element={<Login />} />
 
-      <Route
-        path="/dashboard/*"
-        element={
-          <ProtectedRoute>
-            <DashboardLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<DashboardOverview />} />
-        <Route path="clients" element={<Clients />} />
-        <Route path="clients/new" element={<AddClientForm />} />
-        <Route path="clients/:clientId" element={<ClientDetail />} />
-        <Route path="clients/:clientId/edit" element={<AddClientForm />} />
-        <Route path="loans" element={<LoanCalculationsPage />} />
-        <Route path="clients/:clientId/payments" element={<ClientPaymentHistory/>} />
+        <Route
+          path="/dashboard/*"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<DashboardOverview />} />
+          <Route path="clients" element={<Clients />} />
+          <Route path="clients/new" element={<AddClientForm />} />
+          <Route path="clients/:clientId" element={<ClientDetail />} />
+          <Route path="clients/:clientId/edit" element={<AddClientForm />} />
+          <Route path="loans" element={<LoanCalculationsPage />} />
+          <Route path="clients/:clientId/payments" element={<ClientPaymentHistory />} />
+          <Route path="assign" element={<AssignClients />} /> 
 
-      </Route>
+        </Route>
 
-      <Route path="*" element={<Navigate to="/login" replace />} />
-    </Routes>
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </>
   );
 }

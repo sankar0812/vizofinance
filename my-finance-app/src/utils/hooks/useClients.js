@@ -11,7 +11,7 @@ export function useClients() {
 
   const fetchClients = useCallback(async () => {
     console.log(token, 'AUTH TOKEN');
-    
+
     setLoading(true)
     setError(null)
     try {
@@ -43,9 +43,14 @@ export function useClients() {
         },
         body: JSON.stringify(client),
       })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      await res.json()
-      fetchClients()
+      const json = await res.json();
+
+      if (!res.ok) {
+        throw new Error(json?.message || `HTTP ${res.status}`);
+      }
+
+      fetchClients();
+      return { success: true };
     } catch (err) {
       console.error('Add client failed', err)
       setError(err)
@@ -102,6 +107,7 @@ function normalizeClient(raw) {
     status: normalizeStatus(raw.status),
     revenue: Number(raw.revenue) || 0,
     joinedDate: raw.joinedDate ?? raw.createdAt ?? null,
+    assignedTo: raw.assignedTo ?? raw.userId ?? null,
     ...raw,
   }
 }

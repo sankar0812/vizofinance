@@ -8,7 +8,8 @@ import {
   useMediaQuery,
   IconButton,
   InputAdornment,
-  Card
+  Card,
+  CircularProgress,
 } from '@mui/material'
 import { Eye, EyeOff } from 'lucide-react'
 import Illustration from '../../assets/login-illustrate.png'
@@ -31,6 +32,8 @@ function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+
   const theme = useTheme()
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'))
 
@@ -44,6 +47,7 @@ function Login() {
       return
     }
 
+    setLoading(true)
     try {
       const response = await fetch(`${API_BASE}/api/auth/login`, {
         method: 'POST',
@@ -60,13 +64,15 @@ function Login() {
     } catch (err) {
       console.error(err)
       setError('Network error. Please try again.')
+    } finally {
+      setLoading(false)
     }
   }
 
   return (
     <Grid container sx={{ height: '100vh' }} alignItems="center" justifyContent="center">
       {/* Image Section */}
-      {!isSmallScreen && (
+      {/* {!isSmallScreen && (
         <Grid
           item
           md={6}
@@ -87,7 +93,7 @@ function Login() {
             />
           </Box>
         </Grid>
-      )}
+      )} */}
 
       {/* Form Section */}
       <Grid
@@ -114,12 +120,12 @@ function Login() {
           }}
         >
           <Box>
-            <Box sx={{ textAlign: 'center', mb: 3 }}>
+            <Box sx={{ textAlign: 'center', mb: 4 }}>
               <img src={Logo} alt="Company Logo" style={{ width: '70px' }} />
               <Typography variant="h5" fontWeight={700} sx={{ mt: 1 }}>
                 Finance Login
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
                 Welcome to Vizo Finance
               </Typography>
             </Box>
@@ -130,7 +136,7 @@ function Login() {
                 variant="outlined"
                 fullWidth
                 required
-                sx={{ mb: 2 }}
+                sx={{ mb: 4 }}
                 size="small"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -141,7 +147,7 @@ function Login() {
                 variant="outlined"
                 fullWidth
                 required
-                sx={{ mb: 2 }}
+                sx={{ mb: 4 }}
                 size="small"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -162,8 +168,15 @@ function Login() {
                 </Typography>
               )}
 
-              <Button type="submit" variant="contained" color="primary" fullWidth sx={{ mt: 1 }}>
-                Login
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                fullWidth
+                sx={{ mt: 1 }}
+                disabled={loading}
+              >
+                {loading ? <CircularProgress size={24} sx={{ color: '#fff' }} /> : 'Login'}
               </Button>
             </form>
           </Box>

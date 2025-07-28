@@ -105,6 +105,7 @@ const AddClientForm = () => {
     navigate('/dashboard/clients');
   };
 
+
   return (
     <Dialog open onClose={() => navigate('/dashboard/clients')} maxWidth="md" fullWidth>
       <DialogTitle>{clientToEdit ? 'Edit Client' : 'Add New Client'}</DialogTitle>

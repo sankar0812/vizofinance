@@ -13,7 +13,7 @@ export function AuthProvider({ children }) {
   });
 
   const login = useCallback((email, name, role, token) => {
-    const userData = { email, name, role, token };
+    const userData = { email, name, role, token, loanAmount: 0, totalPaid: 0, totalDue: 0, totalInterest: 0 };
     console.log(userData, 'UserData');
     
     setUser(userData);

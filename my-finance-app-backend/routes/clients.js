@@ -130,13 +130,36 @@ router.post('/', auth, authorize('ADMIN', 'EMPLOYEE'), async (req, res) => {
       },
     });
 
+    if (client) {
+      await sendMail(
+        client.email,
+        'Welcome to VizoFinance!',
+        `
+        <h3>Hello ${client.name},</h3>
+        <p>Welcome to <strong>VizoFinance</strong>! Your account has been successfully created.</p>
+        <p>Here are your details:</p>
+        <ul>
+          <li><strong>Email:</strong> ${client.email}</li>
+          <li><strong>Phone:</strong> ${client.phone}</li>
+          <li><strong>Loan Amount:</strong> ₹${client.loanAmount}</li>
+          <li><strong>Interest Rate:</strong> ${client.interestRate}%</li>
+          <li><strong>Loan Term:</strong> ${client.loanTermMonths} months</li>
+        </ul>
+        <p>You can now log in and start managing your loans.</p>
+        <br/>
+        <p>Regards,<br/>VizoFinance Team</p>
+        `
+      );
+
+      console.log('Client creation email sent successfully.');
+    }
+
     res.status(201).json({ client, user: newUser });
   } catch (err) {
     console.error('Error creating client and user:', err);
     res.status(400).json({ message: err.message });
   }
 });
-
 
 // // UPDATE a client
 // router.put('/:id', async (req, res) => {

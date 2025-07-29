@@ -12,6 +12,8 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import AssignClients from './pages/AssignClients';
 import CurentClientDetails from './pages/client/CurentClientDetails';
+import Employees from './pages/Employees';
+
 
 
 function ProtectedRoute({ children }) {
@@ -43,6 +45,7 @@ export default function App() {
           <Route path="loans" element={<LoanCalculationsPage />} />
           <Route path="clients/:clientId/payments" element={<ClientPaymentHistory />} />
           <Route path="assign" element={<AssignClients />} /> 
+          <Route path="employee" element={<Employees />} />
 
         </Route>
 

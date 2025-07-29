@@ -37,6 +37,13 @@ app.use('/api/clients', clientsRouter);
 const authRouter = require('./routes/auth');
 app.use('/api/auth', authRouter);
 
+const employeeRoutes = require('./routes/employee');
+app.use('/api/employees', employeeRoutes);
+
 app.get('/', (req, res) => {
   res.send('Finance App Backend is running!');
+
+
+
+
 });

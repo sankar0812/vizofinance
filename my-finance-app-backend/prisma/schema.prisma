@@ -17,6 +17,8 @@ model User {
 
   client Client? @relation
 
+  employee    Employee?
+
   assignedClients Client[] @relation("AssignedEmployee")
 }
 
@@ -62,4 +64,17 @@ model PaymentHistory {
   remainingBalance Float
   paymentMonth     Int?
   paymentYear      Int?
+}
+
+
+model Employee {
+  id          Int     @id @default(autoincrement())
+  name        String
+  email       String  @unique
+  phone       String
+  address     String
+  joinedDate  DateTime
+  role        String
+  userId      Int     @unique
+  user        User    @relation(fields: [userId], references: [id])
 }

@@ -33,7 +33,7 @@ const calculateLoanPaymentDetails = (principal, annualInterestRate, loanTermMont
 };
 
 // GET all clients
-router.get('/', auth, authorize('ADMIN', 'EMPLOYEE'),async (req, res) => {
+router.get('/', auth, authorize('ADMIN', 'EMPLOYEE'), async (req, res) => {
   try {
     const clients = await prisma.client.findMany({
       include: { paymentHistory: true },
@@ -231,17 +231,17 @@ router.put('/:id', auth, authorize('ADMIN'), async (req, res) => {
         email,
         paymentHistory: paymentHistory
           ? {
-              deleteMany: {},
-              create: paymentHistory.map(ph => ({
-                paymentDate: ph.paymentDate,
-                amountPaid: ph.amountPaid,
-                principalPaid: ph.principalPaid,
-                interestPaid: ph.interestPaid,
-                remainingBalance: ph.remainingBalance,
-                paymentMonth: ph.paymentMonth,
-                paymentYear: ph.paymentYear,
-              })),
-            }
+            deleteMany: {},
+            create: paymentHistory.map(ph => ({
+              paymentDate: ph.paymentDate,
+              amountPaid: ph.amountPaid,
+              principalPaid: ph.principalPaid,
+              interestPaid: ph.interestPaid,
+              remainingBalance: ph.remainingBalance,
+              paymentMonth: ph.paymentMonth,
+              paymentYear: ph.paymentYear,
+            })),
+          }
           : undefined,
       },
       include: { paymentHistory: true },
@@ -255,7 +255,7 @@ router.put('/:id', auth, authorize('ADMIN'), async (req, res) => {
 });
 
 // DELETE client
-router.delete('/:id',auth, authorize('ADMIN'), async (req, res) => {
+router.delete('/:id', auth, authorize('ADMIN'), async (req, res) => {
   try {
     await prisma.paymentHistory.deleteMany({ where: { clientId: parseInt(req.params.id) } });
     await prisma.client.delete({ where: { id: parseInt(req.params.id) } });
@@ -325,7 +325,7 @@ router.put('/:id/record-payment', auth, authorize('ADMIN', 'EMPLOYEE'), async (r
     });
 
     console.log(client.email, 'Client Email');
-    
+
     // Send Mail
     await sendMail(
       client.email,
@@ -344,7 +344,7 @@ router.put('/:id/record-payment', auth, authorize('ADMIN', 'EMPLOYEE'), async (r
     );
 
     console.log('Mail sent succesfuly');
-    
+
 
     res.json({ message: 'Payment recorded and confirmation email sent successfully!' });
   } catch (err) {
@@ -354,13 +354,18 @@ router.put('/:id/record-payment', auth, authorize('ADMIN', 'EMPLOYEE'), async (r
 });
 
 router.get('/me', auth, authorize('USER'), async (req, res) => {
-  const user = await prisma.user.findUnique({
-    where: { id: req.user.id },
-    include: { client: { include: { paymentHistory: true } } },
-  });
+  if (req.user.role === 'USER') {
+    const client = await prisma.client.findUnique({
+      where: { userId: req.user.id },
+      include: { paymentHistory: true },
+    });
 
-  if (!user?.client) return res.status(404).json({ message: 'Client data not found' });
-  res.json(user.client);
+    if (!client) {
+      return res.status(404).json({ message: 'Client data not found' });
+    }
+
+    return res.json(client);
+  }
 });
 
 module.exports = router;

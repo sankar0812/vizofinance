@@ -30,14 +30,20 @@ import { useAuth } from '../auth/AuthContext';
 
 const drawerWidth = 240;
 
-const navItems = [
-  { label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={18} /> },
-  { label: 'Clients', path: '/dashboard/clients', icon: <UsersIcon size={18} /> },
-  { label: 'Loan Payments', path: '/dashboard/loans', icon: <Wallet size={18} /> },
-  { label: 'Assign Clients', path: '/dashboard/assign', icon: <UsersIcon size={18} /> },
-];
-
 function DrawerContent({ locationPath, onNavClick, user, logout }) {
+  const isAdmin = user?.role === 'ADMIN'
+  const isUser = user?.role === 'USER'
+
+  const navItems = isAdmin ? [
+    { label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={18} /> },
+    { label: 'Clients', path: '/dashboard/clients', icon: <UsersIcon size={18} /> },
+    { label: 'Loan Payments', path: '/dashboard/loans', icon: <Wallet size={18} /> },
+    { label: 'Assign Clients', path: '/dashboard/assign', icon: <UsersIcon size={18} /> },
+  ] : isUser ? [
+    { label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={18} /> },
+  ] : [];
+
+
   const isSelected = (basePath) => {
     if (basePath === '/dashboard') {
       return locationPath === '/dashboard' || locationPath === '/dashboard/';

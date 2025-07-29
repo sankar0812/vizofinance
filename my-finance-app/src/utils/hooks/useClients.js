@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../../pages/auth/AuthContext'
+import { useQuery } from '@tanstack/react-query';
+import axios from 'axios';
 
 const API_BASE = import.meta.env.VITE_APP_BASE_URL
 
@@ -120,3 +122,14 @@ function normalizeStatus(s) {
   if (v === 'lead' || v === 'prospect') return 'Lead'
   return s
 }
+
+export const useSingleClient = (id) => {
+  return useQuery({
+    queryKey: ['client', id],
+    queryFn: async () => {
+      const res = await axios.get(`/api/clients/${id}`);
+      return res.data;
+    },
+    enabled: !!id, // prevent fetching when id is undefined
+  });
+};

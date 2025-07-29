@@ -125,7 +125,7 @@ const AssignClients = () => {
                     <TableRow key={client.id}>
                       <TableCell>{client.name}</TableCell>
                       <TableCell>{client.email}</TableCell>
-                      <TableCell>{client.employee?.email || 'Unknown'}</TableCell>
+                      <TableCell>{client.employee?.email + '(' + '' || 'Unknown'}</TableCell>
                     </TableRow>
                   ))}
               </TableBody>

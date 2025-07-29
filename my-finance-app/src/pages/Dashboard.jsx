@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import {
   Box,
   Grid,
@@ -35,12 +35,22 @@ import { exportClientsToCSV } from '../utils/export'
 import { RevenueLines } from '../components/RevenueLines'
 import { ClientsPie } from '../components/ClientsPie'
 import { useAuth } from './auth/AuthContext'
-import { is } from 'date-fns/locale'
+import { useCurrentClient } from '../utils/hooks/useCurrentClient'
 
 export default function DashboardOverview() {
   const { token, user } = useAuth() || {}
   const isAdmin = user?.role === 'ADMIN'
   const isUser = user?.role === 'USER'
+
+  const { data: currentClient, loadingClient } = useCurrentClient({
+    enabled: !!user?.role && user.role === 'USER',
+  });
+  
+useEffect(() => {
+  if (currentClient) {
+    console.log('Client data:', currentClient);
+  }
+}, [currentClient]);
 
   const {
     data: clients,
@@ -267,7 +277,7 @@ export default function DashboardOverview() {
           </Paper>
         </>
       ) : (
-         <Box sx={{ mb: 6 }}>
+        <Box sx={{ mb: 6 }}>
           <Typography variant="h5" fontWeight={600}>
             Welcome, {user?.email} 👋
           </Typography>
@@ -275,15 +285,21 @@ export default function DashboardOverview() {
             Here’s your loan summary
           </Typography>
 
-          <Box display="flex" flexWrap="wrap" justifyContent="space-between" gap={2} p={1} mb={4}>
-            {renderCard('Loan Amount', formatINR(userLoanAmount || 0), <Users size={20} />)}
-            {renderCard('Total Paid', formatINR(totalPaid), <IndianRupee size={20} />)}
-            {renderCard('Total Due', formatINR(totalDue), <TrendingUp size={20} />)}
-            {renderCard('Total Interest', formatINR(totalInterest), <UserIcon size={20} />)}
-          </Box>
+          {loadingClient ? (
+            <Skeleton variant="rounded" height={100} width="100%" />
+          ) : !currentClient ? (
+            <Typography color="error">Failed to load client data</Typography>
+          ) : (
+            <Box display="flex" flexWrap="wrap" justifyContent="space-between" gap={2} p={1} mb={4}>
+              {renderCard('Loan Amount', formatINR(currentClient.loanAmount || 0), <Users size={20} />)}
+              {renderCard('Total Paid', formatINR(currentClient.totalPaid || 0), <IndianRupee size={20} />)}
+              {renderCard('Total Due', formatINR(currentClient.totalDue || 0), <TrendingUp size={20} />)}
+              {renderCard('Total Interest', formatINR(currentClient.totalInterest || 0), <UserIcon size={20} />)}
+            </Box>
+          )}
         </Box>
 
-    )}
+      )}
     </Box>
   )
 }

@@ -11,6 +11,7 @@ import { useAuth } from './pages/auth/AuthContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import AssignClients from './pages/AssignClients';
+import CurentClientDetails from './pages/client/CurentClientDetails';
 
 
 function ProtectedRoute({ children }) {

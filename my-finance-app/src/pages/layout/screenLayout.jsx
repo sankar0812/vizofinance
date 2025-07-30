@@ -284,6 +284,9 @@ const collapsedWidth = 85;
 function DrawerContent({ locationPath, onNavClick, user, logout, isCollapsed }) {
   const isAdmin = user?.role === 'ADMIN';
   const isUser = user?.role === 'USER';
+  const isEmployee = user?.role === 'EMPLOYEE';
+
+  
 
   const navItems = isAdmin
     ? [
@@ -295,6 +298,8 @@ function DrawerContent({ locationPath, onNavClick, user, logout, isCollapsed }) 
       ]
     : isUser
     ? [{ label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={18} /> }]
+    : isEmployee
+    ? [ { label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={18} /> }]
     : [];
 
   const isSelected = (basePath) => {

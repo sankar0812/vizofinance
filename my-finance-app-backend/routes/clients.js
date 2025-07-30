@@ -353,18 +353,104 @@ router.put('/:id/record-payment', auth, authorize('ADMIN', 'EMPLOYEE'), async (r
   }
 });
 
-router.get('/me', auth, authorize('USER'), async (req, res) => {
-  if (req.user.role === 'USER') {
+
+// router.get('/me', auth, authorize('USER'), async (req, res) => {
+//   if (req.user.role === 'USER') {
+//     const client = await prisma.client.findUnique({
+//       where: { userId: req.user.id },
+//       include: { paymentHistory: true },
+//     });
+
+//     if (!client) {
+//       return res.status(404).json({ message: 'Client data not found' });
+//     }
+
+//     return res.json(client);
+//   }
+// });
+
+router.get('/me', auth, async (req, res) => {
+  try {
     const client = await prisma.client.findUnique({
-      where: { userId: req.user.id },
-      include: { paymentHistory: true },
+      where: {
+        userId: req.user.id,  // 👈 this is correct
+      },
+      include: {
+        paymentHistory: true,
+      },
     });
 
     if (!client) {
-      return res.status(404).json({ message: 'Client data not found' });
+      return res.status(404).json({ message: 'Client not found' });
     }
 
-    return res.json(client);
+    res.json(client);
+  } catch (err) {
+    console.error('GET /api/clients/me failed:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
+// router.get('/me', auth, async (req, res) => {
+//   try {
+//     const client = await prisma.client.findUnique({
+//       where: { userId: req.user.id },
+//     });
+
+//     if (!client) {
+//       return res.status(404).json({ message: 'Client not found' });
+//     }
+
+//     res.json(client);
+//   } catch (err) {
+//     console.error('GET /api/clients/me failed:', err);
+//     res.status(500).json({ message: 'Server error' });
+//   }
+// });
+
+router.put('/:clientId/assign', auth, authorize('ADMIN'), async (req, res) => {
+  const { clientId } = req.params;
+  const { employeeId } = req.body;
+
+  if (!employeeId) {
+    return res.status(400).json({ message: 'Employee ID is required' });
+  }
+
+  try {
+    // Ensure the client exists
+    const client = await prisma.client.findUnique({
+      where: { id: parseInt(clientId) },
+    });
+
+    if (!client) {
+      return res.status(404).json({ message: 'Client not found' });
+    }
+
+    // Ensure the user being assigned is an employee
+    const employeeUser = await prisma.user.findUnique({
+      where: { id: employeeId },
+    });
+
+    // if (!employeeUser || employeeUser.role !== 'EMPLOYEE') {
+    //   return res.status(400).json({ message: 'Invalid employee ID' });
+    // }
+
+    // Assign client to employee
+    const updatedClient = await prisma.client.update({
+      where: { id: parseInt(clientId) },
+      data: {
+        assignedTo: parseInt(employeeId),
+      },
+    });
+
+    res.status(200).json({
+      message: 'Client assigned successfully',
+      client: updatedClient,
+    });
+  } catch (err) {
+    console.error('Error assigning client:', err);
+    res.status(500).json({ message: 'Server error while assigning client.' });
   }
 });
 

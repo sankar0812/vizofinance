@@ -276,7 +276,7 @@ useEffect(() => {
             </Stack>
           </Paper>
         </>
-      ) : (
+      ) : (  
         <Box sx={{ mb: 6 }}>
           <Typography variant="h5" fontWeight={600}>
             Welcome, {user?.email} 👋

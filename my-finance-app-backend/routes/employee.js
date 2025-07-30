@@ -58,4 +58,56 @@ router.get('/', auth, authorize('ADMIN', 'EMPLOYEE'), async (req, res) => {
   }
 });
 
+// GET /api/employees/:id
+router.delete('/:id', auth, authorize('ADMIN'), async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Step 1: Find the employee to get the associated userId
+    const employee = await prisma.employee.findUnique({
+      where: { id: parseInt(id) },
+    });
+
+    if (!employee) {
+      return res.status(404).json({ message: 'Employee not found' });
+    }
+
+    // Step 2: Delete the employee
+    await prisma.employee.delete({
+      where: { id: parseInt(id) },
+    });
+
+    // Step 3: Delete the user using userId
+    await prisma.user.delete({
+      where: { id: employee.userId },
+    });
+
+    res.status(200).json({ message: 'Employee and user deleted successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
+// PUT /api/employees/:id
+router.put('/:id', auth, authorize('ADMIN'), async (req, res) => {
+  try {
+    const employeeId = parseInt(req.params.id, 10);
+    if (isNaN(employeeId)) {
+      return res.status(400).json({ message: 'Invalid employee ID' });
+    }
+
+    const updatedEmployee = await prisma.employee.update({
+      where: { id: employeeId },
+      data: req.body,
+    });
+
+    res.status(200).json(updatedEmployee);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Failed to update employee', error });
+  }
+});
+
 module.exports = router;

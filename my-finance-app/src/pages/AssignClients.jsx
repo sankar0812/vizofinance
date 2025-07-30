@@ -18,7 +18,7 @@ const AssignClients = () => {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const res = await fetch(`${import.meta.env.VITE_APP_BASE_URL}/api/clients/employees/list`, {
+        const res = await fetch(`${import.meta.env.VITE_APP_BASE_URL}/api/employees`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();

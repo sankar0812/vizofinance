@@ -77,3 +77,12 @@ model Employee {
   userId     Int      @unique
   user       User     @relation(fields: [userId], references: [id])
 }
+
+
+model Avatar {
+  id         Int      @id @default(autoincrement())
+  filename   String
+  mimetype   String
+  data       Bytes    // Binary data
+  uploadedAt DateTime @default(now())
+}

@@ -17,6 +17,7 @@ import Logo from '../../assets/fin.png'
 import { useAuth } from './AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { useTheme } from '@mui/material/styles'
+import { toast } from 'react-toastify';
 
 const preloadImage = (src) => {
   const img = new Image()
@@ -58,6 +59,7 @@ function Login() {
       if (response.ok) {
         login(email, data?.name, data?.role, data.token)
         navigate('/dashboard')
+        toast.success('Login successful!')
       } else {
         setError(data.message || 'Login failed')
       }

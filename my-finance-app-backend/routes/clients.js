@@ -373,7 +373,7 @@ router.get('/me', auth, async (req, res) => {
   try {
     const client = await prisma.client.findUnique({
       where: {
-        userId: req.user.id,  // 👈 this is correct
+        userId: req.user.id,
       },
       include: {
         paymentHistory: true,

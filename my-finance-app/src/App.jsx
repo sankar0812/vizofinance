@@ -13,6 +13,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import AssignClients from './pages/AssignClients';
 import CurentClientDetails from './pages/client/CurentClientDetails';
 import Employees from './pages/Employees';
+import ProfilePage from './pages/ProfilePage';
 
 
 
@@ -46,6 +47,7 @@ export default function App() {
           <Route path="clients/:clientId/payments" element={<ClientPaymentHistory />} />
           <Route path="assign" element={<AssignClients />} /> 
           <Route path="employee" element={<Employees />} />
+          <Route path="profile" element={<ProfilePage />} />
 
         </Route>
 

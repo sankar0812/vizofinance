@@ -36,6 +36,7 @@ import { RevenueLines } from '../components/RevenueLines'
 import { ClientsPie } from '../components/ClientsPie'
 import { useAuth } from './auth/AuthContext'
 import { useCurrentClient } from '../utils/hooks/useCurrentClient'
+import { ProfileDropdown } from '../components/ProfileDropdown'
 
 export default function DashboardOverview() {
   const { token, user } = useAuth() || {}
@@ -64,6 +65,7 @@ useEffect(() => {
   const totalRevenue = clients.reduce((sum, c) => sum + (c.revenue || 0), 0)
   const avgRevenuePerClient = totalClients > 0 ? totalRevenue / totalClients : 0
   const activeClients = clients.filter((c) => c.status === 'Active').length
+  
 
   const userLoanAmount = user?.loanAmount || 0
   const totalPaid = clients.reduce((sum, c) => sum + (c.totalPaid || 0), 0)
@@ -149,16 +151,48 @@ useEffect(() => {
 
 
   return (
-    <Box sx={{ width: '100%', pb: 6 }}>
-      {/* Dashboard Header */}
-      <Box sx={{ mb: 2 }}>
-        <Typography variant="h4" fontWeight={700} gutterBottom>
-          Dashboard Overview
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          A comprehensive look at your financial data.
-        </Typography>
-      </Box>
+    // <Box sx={{ width: '100%', pb: 6 }}>
+    //   {/* Dashboard Header */}
+    //   <Box sx={{ mb: 2 }}>
+    //   <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2, backgroundColor: '#f5d7d7ff', p: 1, borderRadius: 2 }}>
+    //     <ProfileDropdown />
+    //   </Box>
+    //     <Typography variant="h4" fontWeight={550} gutterBottom>
+    //       ADMIN DASHBOARD
+    //     </Typography>
+    //     <Typography variant="body2" color="text.secondary">
+    //       A comprehensive look at your financial data.
+    //     </Typography>
+    //   </Box>
+
+<Box sx={{ width: '100%', pb: 6 }}>
+  {/* Dashboard Header */}
+  <Box
+    sx={{
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      mb: 4,
+      px: 3,
+      py: 2,
+      backgroundColor: '#edededff',
+      borderRadius: 2,
+      boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.05)',
+    }}
+  >
+    {/* Title & Subtitle */}
+    <Box>
+      <Typography variant="h5" fontWeight={600}>
+        ADMIN DASHBOARD
+      </Typography>
+      {/* <Typography variant="body2" color="text.secondary">
+        A comprehensive look at your financial data.
+      </Typography> */}
+    </Box>
+
+    {/* Profile Dropdown (top right) */}
+    <ProfileDropdown />
+  </Box>
 
       {isAdmin ? (
         <>

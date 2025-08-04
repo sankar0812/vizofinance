@@ -389,7 +389,7 @@ function DrawerContent({ locationPath, onNavClick, user, logout, isCollapsed }) 
               {user.email}
             </Typography>
           )}
-          <Button
+          {/* <Button
             startIcon={<LogOut size={18} />}
             onClick={logout}
             fullWidth={!isCollapsed}
@@ -398,7 +398,7 @@ function DrawerContent({ locationPath, onNavClick, user, logout, isCollapsed }) 
             sx={{ justifyContent: isCollapsed ? 'center' : 'flex-start' }}
           >
             {!isCollapsed && 'Logout'}
-          </Button>
+          </Button> */}
         </Stack>
       </Box>
     </Box>

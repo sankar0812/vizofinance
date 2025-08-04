@@ -374,3 +374,262 @@ const AddClientForm = () => {
 };
 
 export default AddClientForm;
+
+
+// ----- Daily and Monthly Loan Term Calculation -----
+
+
+// import { useEffect, useState } from 'react';
+// import { useNavigate, useParams } from 'react-router-dom';
+// import {
+//   TextField,
+//   MenuItem,
+//   Button,
+//   Grid,
+//   Typography,
+//   Paper,
+// } from '@mui/material';
+// import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+// import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+// import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+// import { generateId } from '../utils/helpers';
+// import { useClients } from '../utils/hooks/useClients';
+
+// const roles = ['USER', 'ADMIN', 'EMPLOYEE'];
+// const statusOptions = ['Active', 'Inactive', 'Lead'];
+// const loanTermTypes = ['Monthly', 'Daily'];
+
+// const AddClientForm = () => {
+//   const { clientId } = useParams();
+//   const navigate = useNavigate();
+//   const { data: clients, addClient, updateClient } = useClients();
+
+//   const clientToEdit = clients.find((c) => (c._id || c.id).toString() === clientId);
+
+//   const [client, setClient] = useState(
+//     clientToEdit || {
+//       id: '',
+//       name: '',
+//       email: '',
+//       phone: '',
+//       address: '',
+//       joinedDate: '',
+//       status: 'Active',
+//       revenue: 0,
+//       transactions: 0,
+//       loanAmount: 0,
+//       interestRate: 0,
+//       loanTerm: 0,
+//       loanTermType: 'Monthly',
+//       role: 'USER',
+//     }
+//   );
+
+//   useEffect(() => {
+//     if (clientToEdit) setClient(clientToEdit);
+//   }, [clientToEdit]);
+
+//   const calculateRevenue = (loanAmount, interestRate, term, type) => {
+//     if (loanAmount > 0 && interestRate > 0 && term > 0) {
+//       const P = loanAmount;
+//       const r = type === 'Monthly' ? interestRate / 12 / 100 : interestRate / 30 / 100;
+//       const n = term;
+
+//       const emi = P * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1);
+//       const totalPayment = emi * n;
+//       return parseFloat((totalPayment - P).toFixed(2));
+//     }
+//     return 0;
+//   };
+
+//   const handleChange = (e) => {
+//     const { name, value, type } = e.target;
+//     const newValue = type === 'number' ? parseFloat(value) : value;
+
+//     setClient((prev) => {
+//       const updated = { ...prev, [name]: newValue };
+
+//       const currentLoanAmount = name === 'loanAmount' ? parseFloat(newValue) || 0 : prev.loanAmount || 0;
+//       const currentInterestRate = name === 'interestRate' ? parseFloat(newValue) || 0 : prev.interestRate || 0;
+//       const currentLoanTerm = name === 'loanTerm' ? parseFloat(newValue) || 0 : prev.loanTerm || 0;
+//       const currentLoanTermType = name === 'loanTermType' ? newValue : prev.loanTermType;
+
+//       updated.revenue = calculateRevenue(
+//         currentLoanAmount,
+//         currentInterestRate,
+//         currentLoanTerm,
+//         currentLoanTermType
+//       );
+
+//       return updated;
+//     });
+//   };
+
+//   const handleDateChange = (newDate) => {
+//     setClient((prev) => ({ ...prev, joinedDate: newDate }));
+//   };
+
+
+//   const handleSubmit = (e) => {
+//     e.preventDefault();
+//     if (clientToEdit) {
+//       updateClient(client);
+//     } else {
+//       addClient({ ...client, id: client.id || generateId() });
+//     }
+//     navigate('/dashboard/clients');
+//   };
+
+
+//   return (
+//     <Paper sx={{ p: 3, mt: 2 }}>
+//       <Typography variant="h5" gutterBottom>
+//         {clientToEdit ? 'Edit Client' : 'Add New Client'}
+//       </Typography>
+//       <Grid container spacing={2}>
+//         <Grid item xs={12} sm={6}>
+//           <TextField
+//             fullWidth
+//             name="name"
+//             label="Name"
+//             value={client.name}
+//             onChange={handleChange}
+//           />
+//         </Grid>
+//         <Grid item xs={12} sm={6}>
+//           <TextField
+//             fullWidth
+//             name="email"
+//             label="Email"
+//             value={client.email}
+//             onChange={handleChange}
+//           />
+//         </Grid>
+//         <Grid item xs={12} sm={6}>
+//           <TextField
+//             fullWidth
+//             name="phone"
+//             label="Phone"
+//             value={client.phone}
+//             onChange={handleChange}
+//           />
+//         </Grid>
+//         <Grid item xs={12} sm={6}>
+//           <TextField
+//             fullWidth
+//             name="address"
+//             label="Address"
+//             value={client.address}
+//             onChange={handleChange}
+//           />
+//         </Grid>
+//         <Grid item xs={12} sm={6}>
+//           <LocalizationProvider dateAdapter={AdapterDateFns}>
+//             <DatePicker
+//               label="Joined Date"
+//               value={client.joinedDate || null}
+//               onChange={handleDateChange}
+//               renderInput={(params) => <TextField fullWidth {...params} />}
+//             />
+//           </LocalizationProvider>
+//         </Grid>
+//         <Grid item xs={12} sm={6}>
+//           <TextField
+//             select
+//             fullWidth
+//             name="status"
+//             label="Status"
+//             value={client.status}
+//             onChange={handleChange}
+//           >
+//             {statusOptions.map((status) => (
+//               <MenuItem key={status} value={status}>
+//                 {status}
+//               </MenuItem>
+//             ))}
+//           </TextField>
+//         </Grid>
+//         <Grid item xs={12} sm={6}>
+//           <TextField
+//             fullWidth
+//             name="loanAmount"
+//             label="Loan Amount"
+//             type="number"
+//             value={client.loanAmount}
+//             onChange={handleChange}
+//           />
+//         </Grid>
+//         <Grid item xs={12} sm={6}>
+//           <TextField
+//             fullWidth
+//             name="interestRate"
+//             label="Interest Rate (%)"
+//             type="number"
+//             value={client.interestRate}
+//             onChange={handleChange}
+//           />
+//         </Grid>
+//         <Grid item xs={12} sm={6}>
+//           <TextField
+//             fullWidth
+//             name="loanTerm"
+//             label={`Loan Term (${client.loanTermType === 'Monthly' ? 'months' : 'days'})`}
+//             type="number"
+//             value={client.loanTerm}
+//             onChange={handleChange}
+//           />
+//         </Grid>
+//         <Grid item xs={12} sm={6}>
+//           <TextField
+//             select
+//             fullWidth
+//             name="loanTermType"
+//             label="Loan Term Type"
+//             value={client.loanTermType}
+//             onChange={handleChange}
+//           >
+//             {loanTermTypes.map((type) => (
+//               <MenuItem key={type} value={type}>
+//                 {type}
+//               </MenuItem>
+//             ))}
+//           </TextField>
+//         </Grid>
+//         <Grid item xs={12} sm={6}>
+//           <TextField
+//             fullWidth
+//             name="revenue"
+//             label="Revenue"
+//             value={client.revenue}
+//             InputProps={{
+//               readOnly: true,
+//             }}
+//           />
+//         </Grid>
+//         <Grid item xs={12} sm={6}>
+//           <TextField
+//             select
+//             fullWidth
+//             name="role"
+//             label="Role"
+//             value={client.role}
+//             onChange={handleChange}
+//           >
+//             {roles.map((role) => (
+//               <MenuItem key={role} value={role}>
+//                 {role}
+//               </MenuItem>
+//             ))}
+//           </TextField>
+//         </Grid>
+//         <Grid item xs={12}>
+//           <Button variant="contained" onClick={handleSubmit}>
+//             {clientToEdit ? 'Update Client' : 'Add Client'}
+//           </Button>
+//         </Grid>
+//       </Grid>
+//     </Paper>
+//   );
+// };
+
+// export default AddClientForm;

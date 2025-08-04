@@ -9,46 +9,61 @@ router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Find user by email
-    const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) return res.status(400).json({ message: 'Invalid credentials.!' });
+    const client = await prisma.client.findUnique({ where: { email } });
+    if (!client) return res.status(400).json({ message: 'Invalid Email Address.' });
 
-    // Compare password with hashed password
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: 'Invalid credentials.' });
+    const isMatch = await bcrypt.compare(password, client.password);
+    if (!isMatch) return res.status(400).json({ message: 'Invalid Password.' });
 
-    // Create JWT token
-    const token = jwt.sign({ id: user.id, role: user.role },process.env.JWT_SECRET,{ expiresIn: '1h' });
+    const token = jwt.sign({ id: client.id, role: client.role }, process.env.JWT_SECRET, {
+      expiresIn: '1h',
+    });
 
-    res.json({ message: 'Logged in successfully!',name : user?.name , role: user?.role , token });
+    res.json({
+      message: 'Logged in successfully!',
+      name: client.name,
+      role: client.role,
+      token,
+    });
   } catch (error) {
-    console.error('Error during login:', error);
+    console.error('Login error:', error);
     res.status(500).json({ message: 'Server error during login.' });
   }
 });
 
-// REGISTER (Optional: For creating new users)
+// REGISTER new client
 router.post('/register', async (req, res) => {
-  const { email, password } = req.body;
+  const { name, email, password, phone, address, joinedDate } = req.body;
+
   try {
-    // Check if user already exists
-    const existingUser = await prisma.user.findUnique({ where: { email } });
-    if (existingUser) return res.status(400).json({ message: 'User already exists.' });
+    // Check if client already exists
+    const existingClient = await prisma.client.findUnique({ where: { email } });
+    if (existingClient) {
+      return res.status(400).json({ message: 'Client with this email already exists.' });
+    }
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
-    const user = await prisma.user.create({
+    // Create client (with role USER by default)
+    const client = await prisma.client.create({
       data: {
+        name,
         email,
         password: hashedPassword,
+        phone,
+        address,
+        joinedDate: joinedDate || new Date().toISOString(),
+        role: 'USER',
       },
     });
 
-    res.status(201).json({ message: 'User registered successfully!', userId: user.id });
+    res.status(201).json({
+      message: 'Client registered successfully!',
+      clientId: client.id,
+    });
   } catch (error) {
-    console.error('Error during registration:', error);
+    console.error('Error during client registration:', error);
     res.status(500).json({ message: 'Server error during registration.' });
   }
 });

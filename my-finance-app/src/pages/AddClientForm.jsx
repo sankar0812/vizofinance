@@ -31,7 +31,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { generateId } from '../utils/helpers';
 import { useClients } from '../utils/hooks/useClients';
 
-const roles = ['USER', 'ADMIN', 'EMPLOYEE'];
+const roles = ['USER', 'ADMIN'];
 const statusOptions = ['Active', 'Inactive', 'Lead'];
 
 const AddClientForm = () => {

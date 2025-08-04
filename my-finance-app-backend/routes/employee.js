@@ -1,4 +1,3 @@
-// routes/employee.js
 const express = require('express');
 const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
@@ -11,22 +10,13 @@ router.post('/', auth, authorize('ADMIN'), async (req, res) => {
   try {
     const { name, email, phone, address, joinedDate, password } = req.body;
 
-
-    // Check if email already exists
-    const existing = await prisma.user.findUnique({ where: { email } });
+    // Check if email already exists in Employee model
+    const existing = await prisma.employee.findUnique({ where: { email } });
     if (existing) {
       return res.status(400).json({ message: 'Email already exists' });
     }
 
     const hashedPassword = await bcrypt.hash(password || phone, 10);
-
-    const newUser = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        role: 'EMPLOYEE',
-      },
-    });
 
     const employee = await prisma.employee.create({
       data: {
@@ -35,8 +25,8 @@ router.post('/', auth, authorize('ADMIN'), async (req, res) => {
         phone,
         address,
         joinedDate: new Date(joinedDate),
+        // password: hashedPassword,
         role: 'EMPLOYEE',
-        userId: newUser.id,
       },
     });
 
@@ -58,12 +48,11 @@ router.get('/', auth, authorize('ADMIN', 'EMPLOYEE'), async (req, res) => {
   }
 });
 
-// GET /api/employees/:id
+// DELETE /api/employees/:id
 router.delete('/:id', auth, authorize('ADMIN'), async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Step 1: Find the employee to get the associated userId
     const employee = await prisma.employee.findUnique({
       where: { id: parseInt(id) },
     });
@@ -72,25 +61,18 @@ router.delete('/:id', auth, authorize('ADMIN'), async (req, res) => {
       return res.status(404).json({ message: 'Employee not found' });
     }
 
-    // Step 2: Delete the employee
     await prisma.employee.delete({
       where: { id: parseInt(id) },
     });
 
-    // Step 3: Delete the user using userId
-    await prisma.user.delete({
-      where: { id: employee.userId },
-    });
-
-    res.status(200).json({ message: 'Employee and user deleted successfully' });
+    res.status(200).json({ message: 'Employee deleted successfully' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
-
-// PUT /api/employees/:id
+// Update
 router.put('/:id', auth, authorize('ADMIN'), async (req, res) => {
   try {
     const employeeId = parseInt(req.params.id, 10);
@@ -98,9 +80,15 @@ router.put('/:id', auth, authorize('ADMIN'), async (req, res) => {
       return res.status(400).json({ message: 'Invalid employee ID' });
     }
 
+    const { password, ...updateData } = req.body;
+
+    if (password) {
+      updateData.password = await bcrypt.hash(password, 10);
+    }
+
     const updatedEmployee = await prisma.employee.update({
       where: { id: employeeId },
-      data: req.body,
+      data: updateData,
     });
 
     res.status(200).json(updatedEmployee);

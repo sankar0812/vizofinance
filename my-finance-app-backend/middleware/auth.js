@@ -1,16 +1,33 @@
 const jwt = require('jsonwebtoken');
+const prisma = require('../prismaClient');
 
-const auth = (req, res, next) => {
-  const token = req.header('Authorization');
-  if (!token) return res.status(401).json({ message: 'No token, authorization denied.' });
+const auth = async (req, res, next) => {
+  const authHeader = req.header('Authorization');
+  if (!authHeader) {
+    return res.status(401).json({ message: 'No token, authorization denied.' });
+  }
 
-  const tokenString = token.startsWith('Bearer ') ? token.slice(7) : token;
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
 
   try {
-    const decoded = jwt.verify(tokenString, process.env.JWT_SECRET);
-    req.user = { id: decoded.id, role: decoded.role }; 
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Fetch the client from DB to ensure they exist and are active
+    const client = await prisma.client.findUnique({ where: { id: decoded.id } });
+    if (!client) {
+      return res.status(401).json({ message: 'Client no longer exists or invalid token.' });
+    }
+
+    req.user = {
+      id: client.id,
+      role: client.role,
+      email: client.email,
+      name: client.name,
+    };
+
     next();
   } catch (err) {
+    console.error('JWT verification failed:', err);
     res.status(403).json({ message: 'Token is not valid.' });
   }
 };

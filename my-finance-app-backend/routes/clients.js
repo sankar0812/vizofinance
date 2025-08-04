@@ -74,89 +74,81 @@ router.post('/', auth, authorize('ADMIN', 'EMPLOYEE'), async (req, res) => {
     const {
       name, email, phone, address, joinedDate, status,
       revenue, transactions, loanAmount, interestRate, loanTermMonths,
-      password, role // Accept role from request
+      password, role 
     } = req.body;
-    // Check if user already exists
-    const existingUser = await prisma.user.findUnique({ where: { email } });
-    if (existingUser) {
-      return res.status(400).json({ message: 'User with this email already exists.' });
+
+    // Check if client with email already exists
+    const existingClient = await prisma.client.findUnique({ where: { email } });
+    if (existingClient) {
+      return res.status(400).json({ message: 'Client with this email already exists.' });
     }
 
-    // Validate and restrict role creation
+    // Validate and restrict role assignment
     let finalRole = 'USER'; // Default fallback
     const currentUserRole = req.user.role;
 
     if (currentUserRole === 'ADMIN') {
-      // Allow ADMIN to assign any role
       if (['USER', 'EMPLOYEE', 'ADMIN'].includes(role)) {
         finalRole = role;
       }
     } else if (currentUserRole === 'EMPLOYEE') {
-      // EMPLOYEE can only assign USER role
       if (role === 'USER') {
         finalRole = 'USER';
       } else {
-        return res.status(403).json({ message: 'EMPLOYEEs can only create USER accounts.' });
+        return res.status(403).json({ message: 'Employees can only create USER accounts.' });
       }
     }
 
-    const hashedPassword = await bcrypt.hash(phone, 10);
+    // Use phone as password fallback if not provided
+    const rawPassword = password || phone;
+    const hashedPassword = await bcrypt.hash(rawPassword, 10);
 
-    // Create user
-    const newUser = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        role: finalRole,
-      },
-    });
-
-    // Create client
+    // Create new client
     const client = await prisma.client.create({
       data: {
         name,
         email,
+        password: hashedPassword,
         phone,
         address,
-        joinedDate,
-        status,
+        joinedDate: joinedDate || new Date().toISOString(),
+        status: status || 'Active',
         revenue: revenue || 0,
         transactions: transactions || 0,
         loanAmount: loanAmount || 0,
         interestRate: interestRate || 0,
         loanTermMonths: loanTermMonths || 0,
         currentOutstandingLoanAmount: loanAmount || 0,
-        userId: newUser.id,
+        role: finalRole,
       },
     });
 
-    if (client) {
-      await sendMail(
-        client.email,
-        'Welcome to VizoFinance!',
-        `
-        <h3>Hello ${client.name},</h3>
-        <p>Welcome to <strong>VizoFinance</strong>! Your account has been successfully created.</p>
-        <p>Here are your details:</p>
-        <ul>
-          <li><strong>Email:</strong> ${client.email}</li>
-          <li><strong>Phone:</strong> ${client.phone}</li>
-          <li><strong>Loan Amount:</strong> ₹${client.loanAmount}</li>
-          <li><strong>Interest Rate:</strong> ${client.interestRate}%</li>
-          <li><strong>Loan Term:</strong> ${client.loanTermMonths} months</li>
-        </ul>
-        <p>You can now log in and start managing your loans.</p>
-        <br/>
-        <p>Regards,<br/>VizoFinance Team</p>
-        `
-      );
+    // Send welcome email
+    await sendMail(
+      client.email,
+      'Welcome to VizoFinance!',
+      `
+      <h3>Hello ${client.name},</h3>
+      <p>Welcome to <strong>VizoFinance</strong>! Your account has been successfully created.</p>
+      <p>Here are your details:</p>
+      <ul>
+        <li><strong>Email:</strong> ${client.email}</li>
+        <li><strong>Phone:</strong> ${client.phone}</li>
+        <li><strong>Loan Amount:</strong> ₹${client.loanAmount}</li>
+        <li><strong>Interest Rate:</strong> ${client.interestRate}%</li>
+        <li><strong>Loan Term:</strong> ${client.loanTermMonths} months</li>
+      </ul>
+      <p>You can now log in and start managing your loans.</p>
+      <br/>
+      <p>Regards,<br/>VizoFinance Team</p>
+      `
+    );
 
-      console.log('Client creation email sent successfully.');
-    }
+    console.log('Client creation email sent successfully.');
 
-    res.status(201).json({ client, user: newUser });
+    res.status(201).json({ client });
   } catch (err) {
-    console.error('Error creating client and user:', err);
+    console.error('Error creating client:', err);
     res.status(400).json({ message: err.message });
   }
 });
@@ -201,7 +193,6 @@ router.post('/', auth, authorize('ADMIN', 'EMPLOYEE'), async (req, res) => {
 // });
 
 // UPDATE a client
-// UPDATE a client and their associated user
 router.put('/:id', auth, authorize('ADMIN'), async (req, res) => {
   try {
     const clientId = parseInt(req.params.id);
@@ -209,39 +200,39 @@ router.put('/:id', auth, authorize('ADMIN'), async (req, res) => {
 
     const existingClient = await prisma.client.findUnique({
       where: { id: clientId },
-      include: { user: true }, // include the related user
+      include: { paymentHistory: true },
     });
 
     if (!existingClient) {
       return res.status(404).json({ message: 'Client not found.' });
     }
 
-    // Update the user (email only here, expand if needed)
+    // Check if the new email is already used by another client
     if (email && email !== existingClient.email) {
-      await prisma.user.update({
-        where: { id: existingClient.userId },
-        data: { email },
-      });
+      const emailTaken = await prisma.client.findUnique({ where: { email } });
+      if (emailTaken && emailTaken.id !== clientId) {
+        return res.status(400).json({ message: 'Email already in use by another client.' });
+      }
     }
 
     const updatedClient = await prisma.client.update({
       where: { id: clientId },
       data: {
         ...clientData,
-        email,
+        email: email || existingClient.email,
         paymentHistory: paymentHistory
           ? {
-            deleteMany: {},
-            create: paymentHistory.map(ph => ({
-              paymentDate: ph.paymentDate,
-              amountPaid: ph.amountPaid,
-              principalPaid: ph.principalPaid,
-              interestPaid: ph.interestPaid,
-              remainingBalance: ph.remainingBalance,
-              paymentMonth: ph.paymentMonth,
-              paymentYear: ph.paymentYear,
-            })),
-          }
+              deleteMany: {}, // clear old
+              create: paymentHistory.map(ph => ({
+                paymentDate: ph.paymentDate,
+                amountPaid: ph.amountPaid,
+                principalPaid: ph.principalPaid,
+                interestPaid: ph.interestPaid,
+                remainingBalance: ph.remainingBalance,
+                paymentMonth: ph.paymentMonth,
+                paymentYear: ph.paymentYear,
+              })),
+            }
           : undefined,
       },
       include: { paymentHistory: true },
@@ -249,7 +240,7 @@ router.put('/:id', auth, authorize('ADMIN'), async (req, res) => {
 
     res.json(updatedClient);
   } catch (err) {
-    console.error('Error updating client and user:', err);
+    console.error('Error updating client:', err);
     res.status(400).json({ message: err.message });
   }
 });

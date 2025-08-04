@@ -7,31 +7,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
-  role      Role     @default(USER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  client Client? @relation
-
-  employee Employee?
-
-  assignedClients Client[] @relation("AssignedEmployee")
-}
-
-enum Role {
-  ADMIN
-  EMPLOYEE
-  USER
-}
-
 model Client {
   id                           Int              @id @default(autoincrement())
   name                         String
   email                        String           @unique
+  password                     String
   phone                        String?
   address                      String?
   joinedDate                   String?
@@ -47,10 +27,22 @@ model Client {
   updatedAt                    DateTime         @updatedAt
 
   assignedTo Int?
-  employee   User? @relation("AssignedEmployee", fields: [assignedTo], references: [id])
+  employee   Employee? @relation("EmployeeClients", fields: [assignedTo], references: [id])
 
-  user   User @relation(fields: [userId], references: [id])
-  userId Int  @unique
+  avatarId   Int?
+
+  role Role @default(USER)
+}
+
+model Employee {
+  id         Int      @id @default(autoincrement())
+  name       String
+  email      String   @unique
+  phone      String
+  address    String
+  joinedDate DateTime
+  role       String   @default("EMPLOYEE")
+  clients    Client[] @relation("EmployeeClients")
 }
 
 model PaymentHistory {
@@ -66,23 +58,16 @@ model PaymentHistory {
   paymentYear      Int?
 }
 
-model Employee {
-  id         Int      @id @default(autoincrement())
-  name       String
-  email      String   @unique
-  phone      String
-  address    String
-  joinedDate DateTime
-  role       String
-  userId     Int      @unique
-  user       User     @relation(fields: [userId], references: [id])
+enum Role {
+  ADMIN
+  EMPLOYEE
+  USER
 }
-
 
 model Avatar {
   id         Int      @id @default(autoincrement())
   filename   String
   mimetype   String
-  data       Bytes    // Binary data
+  data       Bytes
   uploadedAt DateTime @default(now())
 }

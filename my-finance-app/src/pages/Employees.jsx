@@ -145,7 +145,13 @@ const Employees = () => {
 
   return (
     <Container>
-      <Typography variant="h4" gutterBottom className="my-4">
+      <Typography variant="h4" fontWeight={700} gutterBottom className="my-4" sx={{
+        mb: 0.5,
+        fontFamily: 'Roboto, sans-serif',
+        fontStyle: 'normal',
+        letterSpacing: 0.8,
+        color: '#10154cff'
+      }}>
         Employee Management
       </Typography>
 

@@ -113,7 +113,13 @@ const Clients = () => {
         spacing={2}
         mb={4}
       >
-        <Typography variant="h4" fontWeight={700}>Client Management</Typography>
+        <Typography variant="h4" fontWeight={700} sx={{
+            mb: 0.5,
+            fontFamily: 'Roboto, sans-serif',
+            fontStyle: 'normal',           
+            letterSpacing: 0.8,            
+            color: '#10154cff'
+          }}>Client Management</Typography>
         <Button variant="contained" startIcon={<PlusCircle size={20} />} onClick={handleAddClient}>
           Add New Client
         </Button>

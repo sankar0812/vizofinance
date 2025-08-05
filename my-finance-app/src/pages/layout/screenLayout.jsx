@@ -299,7 +299,10 @@ function DrawerContent({ locationPath, onNavClick, user, logout, isCollapsed }) 
     : isUser
     ? [{ label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={18} /> }]
     : isEmployee
-    ? [ { label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={18} /> }]
+    ? [ { label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={18} /> }, 
+        { label: 'Assign Clients', path: '/dashboard/clients', icon: <UsersIcon size={18} /> },
+        { label: 'Loan Payments', path: '/dashboard/loans', icon: <Wallet size={18} /> }
+    ]
     : [];
 
   const isSelected = (basePath) => {
@@ -483,9 +486,9 @@ export default function DashboardLayout() {
             '& .MuiDrawer-paper': {
               boxSizing: 'border-box',
               width: isCollapsed ? collapsedWidth : drawerWidth,
-              bgcolor: '#0f172a',
+              bgcolor: '#1f1f4aff',
               color: '#fff',
-              transition: 'width 0.3s',
+              transition: 'width 0.5s',
               overflowX: 'hidden',
             },
           }}

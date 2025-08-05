@@ -36,7 +36,7 @@ app.use(express.json());
 
       console.log('Default admin user created:', admin.email);
     } else {
-      console.log('ℹAdmin user already exists:', existingAdmin.email);
+      console.log('Admin user already exists:', existingAdmin.email);
     }
 
   } catch (err) {

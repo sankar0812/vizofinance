@@ -37,21 +37,36 @@ import { ClientsPie } from '../components/ClientsPie'
 import { useAuth } from './auth/AuthContext'
 import { useCurrentClient } from '../utils/hooks/useCurrentClient'
 import { ProfileDropdown } from '../components/ProfileDropdown'
+import { useCurrentEmployee } from '../utils/hooks/useCurrentEmployee'
+
 
 export default function DashboardOverview() {
   const { token, user } = useAuth() || {}
   const isAdmin = user?.role === 'ADMIN'
+  const isEmployee = user?.role === 'EMPLOYEE'
+  const isclient = user?.role === 'USER'
   const isUser = user?.role === 'USER'
 
   const { data: currentClient, loadingClient } = useCurrentClient({
     enabled: !!user?.role && user.role === 'USER',
   });
-  
-useEffect(() => {
-  if (currentClient) {
-    console.log('Client data:', currentClient);
-  }
-}, [currentClient]);
+
+  const { data: currentEmployee, loading: loadingEmployee } = useCurrentEmployee({
+    enabled: !!user?.role && user.role === 'EMPLOYEE',
+  });
+
+
+  useEffect(() => {
+    if (currentClient) {
+      console.log('Client data:', currentClient);
+    }
+  }, [currentClient]);
+
+  useEffect(() => {
+    if (currentEmployee) {
+      console.log('Employee data:', currentEmployee);
+    }
+  }, [currentEmployee]);
 
   const {
     data: clients,
@@ -65,7 +80,7 @@ useEffect(() => {
   const totalRevenue = clients.reduce((sum, c) => sum + (c.revenue || 0), 0)
   const avgRevenuePerClient = totalClients > 0 ? totalRevenue / totalClients : 0
   const activeClients = clients.filter((c) => c.status === 'Active').length
-  
+
 
   const userLoanAmount = user?.loanAmount || 0
   const totalPaid = clients.reduce((sum, c) => sum + (c.totalPaid || 0), 0)
@@ -151,48 +166,40 @@ useEffect(() => {
 
 
   return (
-    // <Box sx={{ width: '100%', pb: 6 }}>
-    //   {/* Dashboard Header */}
-    //   <Box sx={{ mb: 2 }}>
-    //   <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2, backgroundColor: '#f5d7d7ff', p: 1, borderRadius: 2 }}>
-    //     <ProfileDropdown />
-    //   </Box>
-    //     <Typography variant="h4" fontWeight={550} gutterBottom>
-    //       ADMIN DASHBOARD
-    //     </Typography>
-    //     <Typography variant="body2" color="text.secondary">
-    //       A comprehensive look at your financial data.
-    //     </Typography>
-    //   </Box>
-
-<Box sx={{ width: '100%', pb: 6 }}>
-  {/* Dashboard Header */}
-  <Box
-    sx={{
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      mb: 4,
-      px: 3,
-      py: 2,
-      backgroundColor: '#edededff',
-      borderRadius: 2,
-      boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.05)',
-    }}
-  >
-    {/* Title & Subtitle */}
-    <Box>
-      <Typography variant="h5" fontWeight={600}>
-        ADMIN DASHBOARD
-      </Typography>
-      {/* <Typography variant="body2" color="text.secondary">
-        A comprehensive look at your financial data.
-      </Typography> */}
-    </Box>
-
-    {/* Profile Dropdown (top right) */}
-    <ProfileDropdown />
-  </Box>
+    <Box sx={{ width: '100%', pb: 6 }}>
+      {/* Dashboard Header */}
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 4,
+          px: 3,
+          py: 2,
+          backgroundColor: '#edededff',
+          borderRadius: 2,
+          boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.05)',
+        }}
+      >
+        {/* Title & Subtitle */}
+        <Box>
+          <Typography variant="h5" fontWeight={600} sx={{
+            mb: 0.5,
+            fontFamily: 'Roboto, sans-serif',
+            fontStyle: 'normal',           
+            letterSpacing: 1,            
+            textTransform: 'uppercase',   
+            color: '#10154cff'            
+          }} >
+            {isAdmin
+              ? 'ADMIN DASHBOARD'
+              : isEmployee
+                ? 'EMPLOYEE DASHBOARD'
+                : 'CLIENT DASHBOARD'}
+          </Typography>
+        </Box>
+        <ProfileDropdown />
+      </Box>
 
       {isAdmin ? (
         <>
@@ -310,7 +317,32 @@ useEffect(() => {
             </Stack>
           </Paper>
         </>
-      ) : (  
+      ) : isEmployee ? (
+        <>
+          {/* Employee Dashboard Content */}
+          <Box sx={{ mb: 6 }}>
+            <Typography variant="h5" fontWeight={600}>
+              Welcome, {user?.email} 👋
+            </Typography>
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+              Here’s your dashboard overview
+            </Typography>
+
+            {loadingClient ? (
+              <Skeleton variant="rounded" height={100} width="100%" />
+            ) : !currentEmployee ? (
+              <Typography color="error">Failed to load employee data</Typography>
+            ) : (
+              <Box display="flex" flexWrap="wrap" justifyContent="space-between" gap={2} p={1} mb={4}>
+                {renderCard('Total Assigned Clients', formatINR(currentEmployee.assignclient || 0), <Users size={20} />)}
+                {renderCard('Revenue Collected', formatINR(currentEmployee.totalPaid || 0), <IndianRupee size={20} />)}
+                {renderCard('EMI Due', formatINR(currentEmployee.totalDue || 0), <TrendingUp size={20} />)}
+              </Box>
+            )}
+          </Box>
+        </>
+      ) : null}
+      {isclient && (
         <Box sx={{ mb: 6 }}>
           <Typography variant="h5" fontWeight={600}>
             Welcome, {user?.email} 👋
@@ -318,7 +350,6 @@ useEffect(() => {
           <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
             Here’s your loan summary
           </Typography>
-
           {loadingClient ? (
             <Skeleton variant="rounded" height={100} width="100%" />
           ) : !currentClient ? (
@@ -332,7 +363,6 @@ useEffect(() => {
             </Box>
           )}
         </Box>
-
       )}
     </Box>
   )

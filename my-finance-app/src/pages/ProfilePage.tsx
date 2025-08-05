@@ -1,8 +1,9 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback, use } from 'react';
 import { Box, Typography, Paper, Avatar, IconButton } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import { useAuth } from './auth/AuthContext';
 import axios from 'axios';
+
 
 const API_BASE = 'http://localhost:5000'
 
@@ -38,6 +39,8 @@ export default function ProfilePage() {
 
     fetchAvatar();
   }, [avatarId, token]);
+
+
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

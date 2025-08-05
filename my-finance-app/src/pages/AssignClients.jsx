@@ -62,7 +62,9 @@ const AssignClients = () => {
 
   return (
     <Box>
-      <Typography variant="h4" fontWeight={800} color="text.primary" mb={3}>Assign Clients to Employees</Typography>
+      <Typography variant="h4" fontWeight={700} color="text.primary"
+              sx={{ mb: 0, pb: 2, color: '#10154cff', fontFamily:'Roboto, sans-serif', fontStyle: 'normal', letterSpacing: 0.5,
+         marginTop: 1, marginBottom: 2 }}> Assign Clients to Employees</Typography>
 
       <Stack spacing={3} width="100%">
         <Select

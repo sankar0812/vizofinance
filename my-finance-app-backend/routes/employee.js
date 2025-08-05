@@ -25,7 +25,7 @@ router.post('/', auth, authorize('ADMIN'), async (req, res) => {
         phone,
         address,
         joinedDate: new Date(joinedDate),
-        // password: hashedPassword,
+        password: hashedPassword,
         role: 'EMPLOYEE',
       },
     });

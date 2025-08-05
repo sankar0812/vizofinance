@@ -186,7 +186,8 @@ export default function LoanCalculationsPage({ customConfirm }) {
         variant="h4"
         fontWeight={700}
         color="text.primary"
-        sx={{ mb: 0, pb: 2 }}
+        sx={{ mb: 0, pb: 2, color: '#10154cff', fontFamily:'Roboto, sans-serif', fontStyle: 'normal', letterSpacing: 0.5
+        }}
       >
         Manage Loan Payments
       </Typography>

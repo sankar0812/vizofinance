@@ -1,3 +1,4 @@
+// Your imports remain unchanged
 import React, { useEffect, useMemo } from 'react'
 import {
   Box,
@@ -35,38 +36,35 @@ import { exportClientsToCSV } from '../utils/export'
 import { RevenueLines } from '../components/RevenueLines'
 import { ClientsPie } from '../components/ClientsPie'
 import { useAuth } from './auth/AuthContext'
-import { useCurrentClient } from '../utils/hooks/useCurrentClient'
 import { ProfileDropdown } from '../components/ProfileDropdown'
-// import { useCurrentEmployee } from '../utils/hooks/useCurrentEmployee'
-
+import { useCurrentClient } from '../utils/hooks/useCurrentClient'
+import { useCurrentEmployee } from '../utils/hooks/useCurrentEmployee'
 
 export default function DashboardOverview() {
   const { token, user } = useAuth() || {}
   const isAdmin = user?.role === 'ADMIN'
   const isEmployee = user?.role === 'EMPLOYEE'
-  const isclient = user?.role === 'USER'
-  const isUser = user?.role === 'USER'
+  const isClient = user?.role === 'USER'
 
   const { data: currentClient, loadingClient } = useCurrentClient({
-    enabled: !!user?.role && user.role === 'USER',
-  });
+    enabled: isClient,
+  })
+
+  const { data: currentEmployee, loading: loadingEmployee } = useCurrentEmployee({
+    enabled: isEmployee,
+  })
 
   useEffect(() => {
     if (currentClient) {
-      console.log('Client data:', currentClient);
+      console.log('Client data:', currentClient)
     }
-  }, [currentClient]);
+  }, [currentClient])
 
-
-  // const { data: currentEmployee, loading: loadingEmployee } = useCurrentEmployee({
-  //   enabled: !!user?.role && user.role === 'EMPLOYEE',
-  // });
-
-  // useEffect(() => {
-  //   if (currentEmployee) {
-  //     console.log('Employee data:', currentEmployee);
-  //   }
-  // }, [currentEmployee]);
+  useEffect(() => {
+    if (currentEmployee) {
+      console.log('Employee data:', currentEmployee)
+    }
+  }, [currentEmployee])
 
   const {
     data: clients,
@@ -83,24 +81,11 @@ export default function DashboardOverview() {
     refetch: refetchEmployees
   } = useClients(false, isEmployee)
 
-  useEffect(() => {
-    if (employees) {
-      console.log('Employee data:', employees);
-    }
-  }, [employees]);
-
-
   const totalClients = clients.length
   const totalRevenue = clients.reduce((sum, c) => sum + (c.revenue || 0), 0)
   const avgRevenuePerClient = totalClients > 0 ? totalRevenue / totalClients : 0
   const activeClients = clients.filter((c) => c.status === 'Active').length
   const totalemployee = employees.length || 0
-
-
-  const userLoanAmount = user?.loanAmount || 0
-  const totalPaid = clients.reduce((sum, c) => sum + (c.totalPaid || 0), 0)
-  const totalDue = clients.reduce((sum, c) => sum + (c.totalDue || 0), 0)
-  const totalInterest = clients.reduce((sum, c) => sum + (c.totalInterest || 0), 0)
 
   const revenueData = useMemo(() => {
     return clients
@@ -179,10 +164,8 @@ export default function DashboardOverview() {
     </Box>
   )
 
-
   return (
     <Box sx={{ width: '100%', pb: 6 }}>
-      {/* Dashboard Header */}
       <Box
         sx={{
           display: 'flex',
@@ -196,16 +179,15 @@ export default function DashboardOverview() {
           boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.05)',
         }}
       >
-        {/* Title & Subtitle */}
         <Box>
           <Typography variant="h5" fontWeight={600} sx={{
             mb: 0.5,
             fontFamily: 'Roboto, sans-serif',
-            fontStyle: 'normal',           
-            letterSpacing: 1,            
-            textTransform: 'uppercase',   
-            color: '#10154cff'            
-          }} >
+            fontStyle: 'normal',
+            letterSpacing: 1,
+            textTransform: 'uppercase',
+            color: '#10154cff'
+          }}>
             {isAdmin
               ? 'ADMIN DASHBOARD'
               : isEmployee
@@ -218,8 +200,7 @@ export default function DashboardOverview() {
 
       {isAdmin ? (
         <>
-          {/* Custom Styled Stat Cards */}
-          <Box display="flex" flexWrap="nowwrap"  justifyContent="space-between" gap={3} p={0} mb={4}>
+          <Box display="flex" flexWrap="nowwrap" justifyContent="space-between" gap={3} p={0} mb={4}>
             {renderCard('Total Clients', totalClients.toLocaleString(), <Users size={20} />)}
             {renderCard('Total Revenue', formatINR(totalRevenue), <IndianRupee size={20} />)}
             {renderCard('Avg. Revenue', formatINR(avgRevenuePerClient), <TrendingUp size={20} />)}
@@ -227,8 +208,6 @@ export default function DashboardOverview() {
             {renderCard('Total Employee', totalemployee.toLocaleString(), <Users size={20} />)}
           </Box>
 
-
-          {/* Charts */}
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mb: 4 }}>
             <Box sx={{ flex: { xs: '100%', md: '48%' } }}>
               <Paper elevation={1} sx={{ p: 3, height: '100%' }}>
@@ -249,8 +228,6 @@ export default function DashboardOverview() {
             </Box>
           </Box>
 
-
-          {/* Clients Table */}
           <Paper elevation={1} sx={{ p: 3, mb: 4 }}>
             <Typography variant="h6" fontWeight="bold" gutterBottom>
               Clients
@@ -261,12 +238,7 @@ export default function DashboardOverview() {
             ) : error ? (
               <Alert severity="error" sx={{ mb: 2 }}>
                 Failed to load clients. {String(error)}
-                <Button
-                  variant="outlined"
-                  size="small"
-                  sx={{ ml: 2 }}
-                  onClick={refetch}
-                >
+                <Button variant="outlined" size="small" sx={{ ml: 2 }} onClick={refetch}>
                   Retry
                 </Button>
               </Alert>
@@ -302,31 +274,14 @@ export default function DashboardOverview() {
             )}
           </Paper>
 
-          {/* Export Section */}
           <Paper elevation={1} sx={{ p: 3 }}>
-            <Stack
-              direction={{ xs: 'column', sm: 'row' }}
-              alignItems="center"
-              justifyContent="space-between"
-              spacing={2}
-            >
+            <Stack direction={{ xs: 'column', sm: 'row' }} alignItems="center" justifyContent="space-between" spacing={2}>
               <Typography variant="subtitle1">Export Data</Typography>
               <Box>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  startIcon={<Download size={16} />}
-                  sx={{ mr: { xs: 0, sm: 1 }, mb: { xs: 1, sm: 0 } }}
-                  onClick={handleExportCSV}
-                >
+                <Button variant="contained" color="primary" startIcon={<Download size={16} />} sx={{ mr: { xs: 0, sm: 1 }, mb: { xs: 1, sm: 0 } }} onClick={handleExportCSV}>
                   Export CSV
                 </Button>
-                <Button
-                  variant="contained"
-                  color="error"
-                  startIcon={<FileText size={16} />}
-                  onClick={handleExportPDF}
-                >
+                <Button variant="contained" color="error" startIcon={<FileText size={16} />} onClick={handleExportPDF}>
                   Export PDF
                 </Button>
               </Box>
@@ -334,31 +289,29 @@ export default function DashboardOverview() {
           </Paper>
         </>
       ) : isEmployee ? (
-        <>
-          {/* Employee Dashboard Content */}
-          <Box sx={{ mb: 6 }}>
-            <Typography variant="h5" fontWeight={600}>
-              Welcome, {user?.email} 👋
-            </Typography>
-            <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-              Here’s your dashboard overview
-            </Typography>
+        <Box sx={{ mb: 6 }}>
+          <Typography variant="h5" fontWeight={600}>
+            Welcome, {user?.email} 👋
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+            Here’s your dashboard overview
+          </Typography>
 
-            {loadingClient ? (
-              <Skeleton variant="rounded" height={100} width="100%" />
-            ) : !currentEmployee ? (
-              <Typography color="error">Failed to load employee data</Typography>
-            ) : (
-              <Box display="flex" flexWrap="wrap" justifyContent="space-between" gap={2} p={1} mb={4}>
-                {renderCard('Total Assigned Clients', formatINR(currentEmployee.assignclient || 0), <Users size={20} />)}
-                {renderCard('Revenue Collected', formatINR(currentEmployee.totalPaid || 0), <IndianRupee size={20} />)}
-                {renderCard('EMI Due', formatINR(currentEmployee.totalDue || 0), <TrendingUp size={20} />)}
-              </Box>
-            )}
-          </Box>
-        </>
+          {loadingEmployee ? (
+            <Skeleton variant="rounded" height={100} width="100%" />
+          ) : !currentEmployee ? (
+            <Typography color="error">Failed to load employee data</Typography>
+          ) : (
+            <Box display="flex" flexWrap="wrap" justifyContent="space-between" gap={2} p={1} mb={4}>
+              {renderCard('Total Assigned Clients', currentEmployee.assignclient, <Users size={20} />)}
+              {renderCard('Revenue Collected', formatINR(currentEmployee.totalPaid), <IndianRupee size={20} />)}
+              {renderCard('EMI Due', formatINR(currentEmployee.totalDue), <TrendingUp size={20} />)}
+            </Box>
+          )}
+        </Box>
       ) : null}
-      {isclient && (
+
+      {isClient && (
         <Box sx={{ mb: 6 }}>
           <Typography variant="h5" fontWeight={600}>
             Welcome, {user?.email} 👋

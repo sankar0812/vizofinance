@@ -6,6 +6,7 @@ import {
 } from '@mui/material';
 import { useClients } from '../utils/hooks/useClients';
 import { useAuth } from './auth/AuthContext';
+import { toast } from 'react-toastify';
 
 const AssignClients = () => {
   const { token } = useAuth();
@@ -45,7 +46,7 @@ const AssignClients = () => {
 
       if (res.ok) {
         await refetch();
-        alert('Client assigned successfully!');
+        toast.success('Client assigned successfully!');
         setSelectedClientId('');
         setSelectedEmployeeId('');
       } else {
@@ -63,8 +64,10 @@ const AssignClients = () => {
   return (
     <Box>
       <Typography variant="h4" fontWeight={700} color="text.primary"
-              sx={{ mb: 0, pb: 2, color: '#10154cff', fontFamily:'Roboto, sans-serif', fontStyle: 'normal', letterSpacing: 0.5,
-         marginTop: 1, marginBottom: 2 }}> Assign Clients to Employees</Typography>
+        sx={{
+          mb: 0, pb: 2, color: '#10154cff', fontFamily: 'Roboto, sans-serif', fontStyle: 'normal', letterSpacing: 0.5,
+          marginTop: 1, marginBottom: 2
+        }}> Assign Clients to Employees</Typography>
 
       <Stack spacing={3} width="100%">
         <Select
@@ -127,7 +130,11 @@ const AssignClients = () => {
                     <TableRow key={client.id}>
                       <TableCell>{client.name}</TableCell>
                       <TableCell>{client.email}</TableCell>
-                      <TableCell>{client.employee?.email + '(' + '' || 'Unknown'}</TableCell>
+                      <TableCell>
+                        {client.employee
+                          ? `${client.employee.name || ''} (${client.employee.email})`
+                          : 'Unknown'}
+                      </TableCell>
                     </TableRow>
                   ))}
               </TableBody>

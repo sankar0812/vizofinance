@@ -1,7 +1,6 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const bcrypt = require('bcrypt');
 const prisma = require('./prismaClient');
 
 const app = express();
@@ -14,37 +13,15 @@ app.use(express.json());
   try {
     await prisma.$connect();
     console.log('✅ Prisma connected to PostgreSQL');
-
-    const existingAdmin = await prisma.client.findUnique({
-      where: { email: process.env.ADMIN_EMAIL },
-    });
-
-    if (!existingAdmin) {
-      const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
-
-      const admin = await prisma.client.create({
-        data: {
-          name: process.env.ADMIN_NAME || 'Admin',
-          email: process.env.ADMIN_EMAIL,
-          password: hashedPassword,
-          phone: '',
-          address: '',
-          role: 'ADMIN',
-          status: 'Active',
-        },
-      });
-
-      console.log('Default admin user created:', admin.email);
-    } else {
-      console.log('Admin user already exists:', existingAdmin.email);
-    }
-
   } catch (err) {
     console.error('❌ Error during startup:', err);
   }
 })();
 
 // Routes
+const adminRouter = require('./routes/admin');
+app.use('/api/admin', adminRouter);
+
 const clientsRouter = require('./routes/clients');
 app.use('/api/clients', clientsRouter);
 
@@ -57,9 +34,6 @@ app.use('/api/employees', employeeRoutes);
 const uploadRouter = require('./routes/upload');
 app.use('/api/upload', uploadRouter);
 
-const supportRouter = require('./routes/support');
-app.use('/api/support', supportRouter);
-
 app.get('/', (req, res) => {
   res.send('Finance App Backend is running!');
 });
@@ -67,3 +41,7 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
   console.log(`🚀 Server running on port: ${port}`);
 });
+
+const supportRouter = require('./routes/support');
+app.use('/api/support', supportRouter);
+

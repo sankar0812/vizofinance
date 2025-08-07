@@ -409,7 +409,6 @@ router.put('/:clientId/assign', auth, authorize('ADMIN'), async (req, res) => {
   }
 
   try {
-    // Ensure the client exists
     const client = await prisma.client.findUnique({
       where: { id: parseInt(clientId) },
     });
@@ -418,16 +417,15 @@ router.put('/:clientId/assign', auth, authorize('ADMIN'), async (req, res) => {
       return res.status(404).json({ message: 'Client not found' });
     }
 
-    // Ensure the user being assigned is an employee
-    const employeeUser = await prisma.user.findUnique({
-      where: { id: employeeId },
+    // Make sure employee exists
+    const employee = await prisma.employee.findUnique({
+      where: { id: parseInt(employeeId) },
     });
 
-    // if (!employeeUser || employeeUser.role !== 'EMPLOYEE') {
-    //   return res.status(400).json({ message: 'Invalid employee ID' });
-    // }
+    if (!employee) {
+      return res.status(400).json({ message: 'Invalid employee ID' });
+    }
 
-    // Assign client to employee
     const updatedClient = await prisma.client.update({
       where: { id: parseInt(clientId) },
       data: {
@@ -443,6 +441,17 @@ router.put('/:clientId/assign', auth, authorize('ADMIN'), async (req, res) => {
     console.error('Error assigning client:', err);
     res.status(500).json({ message: 'Server error while assigning client.' });
   }
+});
+
+router.get("/client/dashboard", auth, authorize('ADMIN', 'EMPLOYEE'), async (req, res) => {
+  const client = await prisma.client.findUnique({
+    where: { email: req.user.email },
+    include: {
+      loanPayments: true, // or however it's related
+    },
+  });
+
+  res.json(client);
 });
 
 module.exports = router;

@@ -98,4 +98,25 @@ router.put('/:id', auth, authorize('ADMIN'), async (req, res) => {
   }
 });
 
+router.get("/dashboard", auth, authorize('ADMIN', 'EMPLOYEE'), async (req, res) => {
+  try {
+    const employee = await prisma.employee.findUnique({
+      where: { email: req.user.email },
+      include: {
+        clients: {
+          include: {
+            paymentHistory: true, // this matches your Prisma model
+          },
+        },
+      },
+    });
+
+    res.json(employee);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to load dashboard', error: err.message });
+  }
+});
+
+
 module.exports = router;

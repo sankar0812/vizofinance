@@ -1,58 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
 model Client {
-  id                           Int              @id @default(autoincrement())
+  id                           Int      @id @default(autoincrement())
   name                         String
-  email                        String           @unique
+  email                        String   @unique
   password                     String
   phone                        String?
   address                      String?
   joinedDate                   String?
-  status                       String           @default("Active")
-  revenue                      Float            @default(0)
-  transactions                 Int              @default(0)
-  loanAmount                   Float            @default(0)
-  interestRate                 Float            @default(0)
-  loanTermMonths               Int              @default(0)
-  currentOutstandingLoanAmount Float            @default(0)
-  createdAt                    DateTime         @default(now())
-  updatedAt                    DateTime         @updatedAt
-  role                         Role             @default(USER)
+  status                       String   @default("Active")
+  revenue                      Float    @default(0)
+  transactions                 Int      @default(0)
+  loanAmount                   Float    @default(0)
+  interestRate                 Float    @default(0)
+  loanTermMonths               Int      @default(0)
+  currentOutstandingLoanAmount Float    @default(0)
+  createdAt                    DateTime @default(now())
+  updatedAt                    DateTime @updatedAt
+  role                         Role     @default(USER)
 
   // Relations
-  assignedTo                   Int?
-  employee                     Employee?        @relation("EmployeeClients", fields: [assignedTo], references: [id])
+  assignedTo Int?
+  employee   Employee? @relation("EmployeeClients", fields: [assignedTo], references: [id])
 
-  avatarId                     Int?
-  avatar                       Avatar?          @relation("ClientAvatar", fields: [avatarId], references: [id])
+  avatarId Int?    @unique
+  avatar   Avatar? @relation("ClientAvatar", fields: [avatarId], references: [id])
 
-  paymentHistory               PaymentHistory[]
+  paymentHistory PaymentHistory[]
 }
 
 model Employee {
-  id         Int       @id @default(autoincrement())
-  name       String
-  email      String    @unique
-  password   String
-  phone      String
-  address    String
-  joinedDate DateTime
-  role       Role      @default(EMPLOYEE)
-
-  avatarId   Int?
-  avatar     Avatar?   @relation("EmployeeAvatar", fields: [avatarId], references: [id])
-
-  clients    Client[]  @relation("EmployeeClients")
-}
-
-model Admin {
   id         Int      @id @default(autoincrement())
   name       String
   email      String   @unique
   password   String
-  role       Role     @default(ADMIN)
-  createdAt  DateTime @default(now())
+  phone      String
+  address    String
+  joinedDate DateTime
+  role       Role     @default(EMPLOYEE)
 
-  avatarId   Int?
-  avatar     Avatar?  @relation("AdminAvatar", fields: [avatarId], references: [id])
+  avatarId Int?    @unique
+  avatar   Avatar? @relation("EmployeeAvatar", fields: [avatarId], references: [id])
+
+  clients Client[] @relation("EmployeeClients")
+}
+
+model Admin {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(ADMIN)
+  createdAt DateTime @default(now())
+
+  avatarId Int?    @unique
+  avatar   Avatar? @relation("AdminAvatar", fields: [avatarId], references: [id])
 }
 
 model Avatar {
@@ -62,7 +71,30 @@ model Avatar {
   data       Bytes
   uploadedAt DateTime @default(now())
 
-  client     Client?  @relation("ClientAvatar")
-  employee   Employee? @relation("EmployeeAvatar")
-  admin      Admin?   @relation("AdminAvatar")
+  client         Client?         @relation("ClientAvatar")
+  employee       Employee?       @relation("EmployeeAvatar")
+  admin          Admin?          @relation("AdminAvatar")
+  paymentHistory PaymentHistory? @relation("PaymentAvatar")
+}
+
+model PaymentHistory {
+  id               Int      @id @default(autoincrement())
+  client           Client   @relation(fields: [clientId], references: [id])
+  clientId         Int
+  paymentDate      DateTime @default(now())
+  amountPaid       Float
+  principalPaid    Float
+  interestPaid     Float
+  remainingBalance Float
+  paymentMonth     Int?
+  paymentYear      Int?
+
+  avatarId Int?    @unique
+  avatar   Avatar? @relation("PaymentAvatar", fields: [avatarId], references: [id])
+}
+
+enum Role {
+  ADMIN
+  EMPLOYEE
+  USER
 }

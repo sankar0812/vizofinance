@@ -14,6 +14,9 @@ import AssignClients from './pages/AssignClients';
 import CurentClientDetails from './pages/client/CurentClientDetails';
 import Employees from './pages/Employees';
 import ProfilePage from './pages/ProfilePage';
+import MyLoans from './pages/MyLoans';
+import MyPayment from './pages/mypayment';
+import Support from './pages/Support';
 
 
 
@@ -48,6 +51,9 @@ export default function App() {
           <Route path="assign" element={<AssignClients />} /> 
           <Route path="employee" element={<Employees />} />
           <Route path="profile" element={<ProfilePage />} />
+          <Route path="myloans" element={<MyLoans />} />
+          <Route path="mypayment" element={<MyPayment />} />
+          <Route path="support" element={<Support />} />
 
         </Route>
 

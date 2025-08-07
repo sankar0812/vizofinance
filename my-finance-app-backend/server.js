@@ -57,6 +57,9 @@ app.use('/api/employees', employeeRoutes);
 const uploadRouter = require('./routes/upload');
 app.use('/api/upload', uploadRouter);
 
+const supportRouter = require('./routes/support');
+app.use('/api/support', supportRouter);
+
 app.get('/', (req, res) => {
   res.send('Finance App Backend is running!');
 });

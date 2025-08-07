@@ -37,7 +37,7 @@ import { ClientsPie } from '../components/ClientsPie'
 import { useAuth } from './auth/AuthContext'
 import { useCurrentClient } from '../utils/hooks/useCurrentClient'
 import { ProfileDropdown } from '../components/ProfileDropdown'
-import { useCurrentEmployee } from '../utils/hooks/useCurrentEmployee'
+// import { useCurrentEmployee } from '../utils/hooks/useCurrentEmployee'
 
 
 export default function DashboardOverview() {
@@ -51,22 +51,22 @@ export default function DashboardOverview() {
     enabled: !!user?.role && user.role === 'USER',
   });
 
-  const { data: currentEmployee, loading: loadingEmployee } = useCurrentEmployee({
-    enabled: !!user?.role && user.role === 'EMPLOYEE',
-  });
-
-
   useEffect(() => {
     if (currentClient) {
       console.log('Client data:', currentClient);
     }
   }, [currentClient]);
 
-  useEffect(() => {
-    if (currentEmployee) {
-      console.log('Employee data:', currentEmployee);
-    }
-  }, [currentEmployee]);
+
+  // const { data: currentEmployee, loading: loadingEmployee } = useCurrentEmployee({
+  //   enabled: !!user?.role && user.role === 'EMPLOYEE',
+  // });
+
+  // useEffect(() => {
+  //   if (currentEmployee) {
+  //     console.log('Employee data:', currentEmployee);
+  //   }
+  // }, [currentEmployee]);
 
   const {
     data: clients,
@@ -76,10 +76,25 @@ export default function DashboardOverview() {
     deleteClient
   } = useClients(isAdmin)
 
+  const {
+    data: employees,
+    loading: loadingEmployees,
+    error: employeeError,
+    refetch: refetchEmployees
+  } = useClients(false, isEmployee)
+
+  useEffect(() => {
+    if (employees) {
+      console.log('Employee data:', employees);
+    }
+  }, [employees]);
+
+
   const totalClients = clients.length
   const totalRevenue = clients.reduce((sum, c) => sum + (c.revenue || 0), 0)
   const avgRevenuePerClient = totalClients > 0 ? totalRevenue / totalClients : 0
   const activeClients = clients.filter((c) => c.status === 'Active').length
+  const totalemployee = employees.length || 0
 
 
   const userLoanAmount = user?.loanAmount || 0
@@ -204,11 +219,12 @@ export default function DashboardOverview() {
       {isAdmin ? (
         <>
           {/* Custom Styled Stat Cards */}
-          <Box display="flex" flexWrap="wrap" justifyContent="space-between" gap={2} p={0} mb={4}>
+          <Box display="flex" flexWrap="nowwrap"  justifyContent="space-between" gap={3} p={0} mb={4}>
             {renderCard('Total Clients', totalClients.toLocaleString(), <Users size={20} />)}
             {renderCard('Total Revenue', formatINR(totalRevenue), <IndianRupee size={20} />)}
             {renderCard('Avg. Revenue', formatINR(avgRevenuePerClient), <TrendingUp size={20} />)}
             {renderCard('Active Clients', activeClients.toLocaleString(), <UserIcon size={20} />)}
+            {renderCard('Total Employee', totalemployee.toLocaleString(), <Users size={20} />)}
           </Box>
 
 

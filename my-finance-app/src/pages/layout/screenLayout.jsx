@@ -273,6 +273,8 @@ import {
   LogOut,
   UserCheck,
   UserPlus,
+  CalendarCheck,
+  Headset,
 } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -286,6 +288,11 @@ function DrawerContent({ locationPath, onNavClick, user, logout, isCollapsed }) 
   const isUser = user?.role === 'USER';
   const isEmployee = user?.role === 'EMPLOYEE';
 
+  const navigate = useNavigate();
+
+  const handleLogoClick = () => {
+    navigate('/dashboard');
+  };
   
 
   const navItems = isAdmin
@@ -297,11 +304,17 @@ function DrawerContent({ locationPath, onNavClick, user, logout, isCollapsed }) 
         { label: 'Add Employee', path: '/dashboard/employee', icon: <UserPlus size={18} /> },
       ]
     : isUser
-    ? [{ label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={18} /> }]
+    ? [{ label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={18} /> },
+       { label: 'My Loan Details', path: '/dashboard/myloans', icon: <Wallet size={18} />},
+       { label: 'Payment Schedule', path: '/dashboard/mypayment', icon: <CalendarCheck size={18} />},
+       { label: 'Contact Support', path: '/dashboard/support', icon: <Headset size={18} />}
+       
+      ]
     : isEmployee
     ? [ { label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={18} /> }, 
-        { label: 'Assign Clients', path: '/dashboard/clients', icon: <UsersIcon size={18} /> },
-        { label: 'Loan Payments', path: '/dashboard/loans', icon: <Wallet size={18} /> }
+        { label: 'Loan Management', path: '/dashboard/loans', icon: <Wallet size={18} /> },
+        { label: 'Assigned Clients', path: '/dashboard/assigned-clients', icon: <UsersIcon size={18} /> },
+        { label: 'Payment Collection', path: '/dashboard/collections', icon: <Wallet size={18} /> }
     ]
     : [];
 
@@ -324,7 +337,7 @@ function DrawerContent({ locationPath, onNavClick, user, logout, isCollapsed }) 
           gap: 1,
         }}
       >
-        <Avatar sx={{ bgcolor: 'primary.main', width: 32, height: 32 }}>
+        <Avatar sx={{ bgcolor: 'primary.main', width: 32, height: 32, gap: 1, cursor: 'pointer' }} onClick={handleLogoClick}>
           <img src={Logo} alt="Company Logo" style={{ width: '100%' }} />
         </Avatar>
         {!isCollapsed && (
@@ -387,7 +400,7 @@ function DrawerContent({ locationPath, onNavClick, user, logout, isCollapsed }) 
           {!isCollapsed && user?.email && (
             <Typography
               variant="caption"
-              sx={{ color: 'rgba(255,255,255,0.7)', textAlign: 'center' }}
+              sx={{ color: 'rgba(214, 214, 214, 0.99)', textAlign: 'center' }}
             >
               {user.email}
             </Typography>

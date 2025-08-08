@@ -2,11 +2,13 @@ import React, { useEffect, useState } from 'react';
 import {
   Box, Typography, MenuItem, Select, Button, Stack,
   CircularProgress, Table, TableBody, TableCell, TableContainer,
-  TableHead, TableRow, Paper
+  TableHead, TableRow, Paper,
+  Tab
 } from '@mui/material';
 import { useClients } from '../utils/hooks/useClients';
 import { useAuth } from './auth/AuthContext';
 import { toast } from 'react-toastify';
+import axios from 'axios';
 
 const AssignClients = () => {
   const { token } = useAuth();
@@ -15,6 +17,9 @@ const AssignClients = () => {
   const [selectedClientId, setSelectedClientId] = useState('');
   const [selectedEmployeeId, setSelectedEmployeeId] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingId, setLoadingId] = useState(null);
+
+  const API_BASE = import.meta.env.VITE_APP_BASE_URL;
 
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -35,7 +40,7 @@ const AssignClients = () => {
   const handleAssign = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_APP_BASE_URL}/api/clients/${selectedClientId}/assign`, {
+      const res = await fetch(`${API_BASE}/api/clients/${selectedClientId}/assign`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -61,6 +66,29 @@ const AssignClients = () => {
     }
   };
 
+
+  const handleUnassign = async (clientId, employeeId) => {
+    try {
+      setLoadingId(clientId);
+      await axios.put(
+        `${API_BASE}/api/clients/${clientId}/unassign`,
+        { employeeId },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      refetch(); // Refresh the clients list
+      toast.success('Client unassigned successfully!');
+    } catch (err) {
+      console.error('Error unassigning client:', err);
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
+
   return (
     <Box>
       <Typography variant="h4" fontWeight={700} color="text.primary"
@@ -70,6 +98,19 @@ const AssignClients = () => {
         }}> Assign Clients to Employees</Typography>
 
       <Stack spacing={3} width="100%">
+        <Select
+          fullWidth
+          size='small'
+          value={selectedEmployeeId}
+          onChange={(e) => setSelectedEmployeeId(e.target.value)}
+          displayEmpty
+        >
+          <MenuItem value="">Select Employee</MenuItem>
+          {employees?.map((emp) => (
+            <MenuItem key={emp.id} value={emp.id}>{emp.email}</MenuItem>
+          ))}
+
+        </Select>
         <Select
           fullWidth
           size='small'
@@ -85,19 +126,6 @@ const AssignClients = () => {
                 {client.name} ({client.email})
               </MenuItem>
             ))}
-        </Select>
-
-        <Select
-          fullWidth
-          size='small'
-          value={selectedEmployeeId}
-          onChange={(e) => setSelectedEmployeeId(e.target.value)}
-          displayEmpty
-        >
-          <MenuItem value="">Select Employee</MenuItem>
-          {employees?.map((emp) => (
-            <MenuItem key={emp.id} value={emp.id}>{emp.email}</MenuItem>
-          ))}
         </Select>
 
         <Button
@@ -121,6 +149,7 @@ const AssignClients = () => {
                   <TableCell><strong>Client Name</strong></TableCell>
                   <TableCell><strong>Email</strong></TableCell>
                   <TableCell><strong>Assigned To (Employee)</strong></TableCell>
+                  <TableCell align="center"><strong>UnAssigned</strong></TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -134,6 +163,18 @@ const AssignClients = () => {
                         {client.employee
                           ? `${client.employee.name || ''} (${client.employee.email})`
                           : 'Unknown'}
+                      </TableCell>
+                      <TableCell align="center">
+                        <Button
+                          variant="outlined"
+                          color="error"
+                          disabled={loadingId === client.id}
+                          onClick={() => handleUnassign(client.id, client.assignedTo)}
+                        >
+                          {loadingId === client.id
+                            ? <CircularProgress size={20} />
+                            : 'Unassign'}
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}

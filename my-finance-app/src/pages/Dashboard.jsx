@@ -81,11 +81,13 @@ export default function DashboardOverview() {
     refetch: refetchEmployees
   } = useClients(false, isEmployee)
 
+
   const totalClients = clients.length
   const totalRevenue = clients.reduce((sum, c) => sum + (c.revenue || 0), 0)
   const avgRevenuePerClient = totalClients > 0 ? totalRevenue / totalClients : 0
   const activeClients = clients.filter((c) => c.status === 'Active').length
   const totalemployee = employees.length || 0
+
 
   const revenueData = useMemo(() => {
     return clients
@@ -302,7 +304,7 @@ export default function DashboardOverview() {
           ) : !currentEmployee ? (
             <Typography color="error">Failed to load employee data</Typography>
           ) : (
-            <Box display="flex" flexWrap="wrap" justifyContent="space-between" gap={2} p={1} mb={4}>
+            <Box display="flex" flexWrap="wrap" justifyContent="space-between" gap={1} p={1} mb={4}>
               {renderCard('Total Assigned Clients', currentEmployee.assignclient, <Users size={20} />)}
               {renderCard('Revenue Collected', formatINR(currentEmployee.totalPaid), <IndianRupee size={20} />)}
               {renderCard('EMI Due', formatINR(currentEmployee.totalDue), <TrendingUp size={20} />)}

@@ -432,7 +432,52 @@ router.put('/:clientId/assign', auth, authorize('ADMIN'), async (req, res) => {
         assignedTo: parseInt(employeeId),
       },
     });
+    console.log('Client assigned to employee successfully:', updatedClient);
+    
+    res.status(200).json({
+      message: 'Client assigned successfully',
+      client: updatedClient,
+    });
+  } catch (err) {
+    console.error('Error assigning client:', err);
+    res.status(500).json({ message: 'Server error while assigning client.' });
+  }
+});
 
+router.put('/:clientId/unassign', auth, authorize('ADMIN'), async (req, res) => {
+  const { clientId } = req.params;
+  const { employeeId } = req.body;
+
+  if (!employeeId) {
+    return res.status(400).json({ message: 'Employee ID is required' });
+  }
+
+  try {
+    const client = await prisma.client.findUnique({
+      where: { id: parseInt(clientId) },
+    });
+
+    if (!client) {
+      return res.status(404).json({ message: 'Client not found' });
+    }
+
+    // Make sure employee exists
+    const employee = await prisma.employee.findUnique({
+      where: { id: parseInt(employeeId) },
+    });
+
+    if (!employee) {
+      return res.status(400).json({ message: 'Invalid employee ID' });
+    }
+
+    const updatedClient = await prisma.client.update({
+      where: { id: parseInt(clientId) },
+      data: {
+        assignedTo: null, // Unassign the client
+      },
+    });
+    console.log('Client assigned to employee successfully:', updatedClient);
+    
     res.status(200).json({
       message: 'Client assigned successfully',
       client: updatedClient,

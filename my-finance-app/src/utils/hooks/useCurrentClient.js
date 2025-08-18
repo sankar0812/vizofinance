@@ -1,27 +1,3 @@
-// import { useQuery } from '@tanstack/react-query'
-// import axios from 'axios'
-// import { useAuth } from '../../pages/auth/AuthContext';
-
-// export const useCurrentClient = () => {
-// const { token, user } = useAuth() || {}
-//   return useQuery({
-//     queryKey: ['current-client'],
-//     queryFn: async () => {
-//       // const res = await axios.get('/api/clients/me', {
-//       //   headers: {
-//       //     Authorization: `Bearer ${token}`,
-//       //     'Cache-Control': 'no-cache',
-//       //   },
-//       // });
-//       // return res.data;
-//     },
-//     staleTime: 0,
-//     cacheTime: 0,
-//     enabled: !!token, // only fetch if token exists
-//   });
-// };
-
-
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../pages/auth/AuthContext';
@@ -51,32 +27,33 @@ export const useCurrentClient = (options = {}) => {
         );
 
         const client = res.data;
-        const loanPayments = client.loanPayments || [];
+        const payments = client.paymentHistory || [];
 
-        if (loanPayments.length === 0) {
+        if (payments.length === 0) {
           setData({
-            client,
+            ...client,
             totalPaid: 0,
             totalDue: 0,
+            totalInterest: 0,
           });
           return;
         }
 
         let totalPaid = 0;
         let totalDue = 0;
+        let totalInterest = 0;
 
-        loanPayments.forEach((payment) => {
-          if (payment.status === 'PAID') {
-            totalPaid += payment.amountPaid || 0;
-          } else if (payment.status === 'DUE') {
-            totalDue += payment.amountPaid || 0;
-          }
+        payments.forEach((p) => {
+          totalPaid += p.amountPaid || 0;
+          totalDue += p.remainingBalance || 0;
+          totalInterest += p.interestPaid || 0;
         });
 
         setData({
-          client,
+          ...client,      // flatten client fields (loanAmount, name, etc.)
           totalPaid,
           totalDue,
+          totalInterest,
         });
       } catch (err) {
         console.error('Error fetching client dashboard:', err);

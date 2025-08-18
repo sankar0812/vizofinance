@@ -105,18 +105,39 @@ router.get("/dashboard", auth, authorize('ADMIN', 'EMPLOYEE'), async (req, res) 
       include: {
         clients: {
           include: {
-            paymentHistory: true, // this matches your Prisma model
+            paymentHistory: true,
           },
         },
       },
     });
 
-    res.json(employee);
+    if (!employee) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
+
+    const clients = employee.clients || [];
+    let totalPaid = 0;
+    let totalDue = 0;
+
+    clients.forEach(client => {
+      client.paymentHistory.forEach(payment => {
+        totalPaid += payment.amountPaid;
+        totalDue += payment.remainingBalance;
+      });
+    });
+
+    res.json({
+      id: employee.id,
+      name: employee.name,
+      email: employee.email,
+      assignclient: clients.length,
+      totalPaid,
+      totalDue,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Failed to load dashboard', error: err.message });
   }
 });
-
 
 module.exports = router;

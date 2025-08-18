@@ -8,7 +8,7 @@ export const useCurrentEmployee = (options = {}) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { token } = useAuth(); // moved outside to avoid re-evaluation
+  const { token } = useAuth();
 
   useEffect(() => {
     if (options.enabled === false) return;
@@ -24,29 +24,15 @@ export const useCurrentEmployee = (options = {}) => {
         });
 
         const employee = res.data;
-
         const clients = employee.clients || [];
-
-        if (clients.length === 0) {
-          setData({
-            employee,
-            assignclient: 0,
-            totalPaid: 0,
-            totalDue: 0,
-          });
-          return;
-        }
 
         let totalPaid = 0;
         let totalDue = 0;
 
         clients.forEach((client) => {
           (client.paymentHistory || []).forEach((payment) => {
-            if (payment.status === 'PAID') {
-              totalPaid += payment.amountPaid || 0;
-            } else if (payment.status === 'DUE') {
-              totalDue += payment.amountPaid || 0;
-            }
+            totalPaid += payment.amountPaid || 0;
+            totalDue += payment.remainingBalance || 0;
           });
         });
 

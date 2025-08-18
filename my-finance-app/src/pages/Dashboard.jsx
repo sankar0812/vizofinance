@@ -305,9 +305,9 @@ export default function DashboardOverview() {
             <Typography color="error">Failed to load employee data</Typography>
           ) : (
             <Box display="flex" flexWrap="wrap" justifyContent="space-between" gap={1} p={1} mb={4}>
-              {renderCard('Total Assigned Clients', currentEmployee.assignclient, <Users size={20} />)}
-              {renderCard('Revenue Collected', formatINR(currentEmployee.totalPaid), <IndianRupee size={20} />)}
-              {renderCard('EMI Due', formatINR(currentEmployee.totalDue), <TrendingUp size={20} />)}
+              {renderCard('Total Assigned Clients', currentEmployee?.employee?.assignclient, <Users size={20} />)}
+              {renderCard('Revenue Collected', formatINR(currentEmployee?.employee?.totalPaid), <IndianRupee size={20} />)}
+              {renderCard('EMI Due', formatINR(currentEmployee?.employee?.totalDue), <TrendingUp size={20} />)}
             </Box>
           )}
         </Box>
@@ -327,7 +327,7 @@ export default function DashboardOverview() {
             <Typography color="error">Failed to load client data</Typography>
           ) : (
             <Box display="flex" flexWrap="wrap" justifyContent="space-between" gap={2} p={1} mb={4}>
-              {renderCard('Loan Amount', formatINR(currentClient.loanAmount || 0), <Users size={20} />)}
+              {renderCard('Loan Amount', formatINR(currentClient?.loanAmount || 0), <Users size={20} />)}
               {renderCard('Total Paid', formatINR(currentClient.totalPaid || 0), <IndianRupee size={20} />)}
               {renderCard('Total Due', formatINR(currentClient.totalDue || 0), <TrendingUp size={20} />)}
               {renderCard('Total Interest', formatINR(currentClient.totalInterest || 0), <UserIcon size={20} />)}

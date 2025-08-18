@@ -74,7 +74,7 @@ router.post('/', auth, authorize('ADMIN', 'EMPLOYEE'), async (req, res) => {
     const {
       name, email, phone, address, joinedDate, status,
       revenue, transactions, loanAmount, interestRate, loanTermMonths,
-      password, role 
+      password, role
     } = req.body;
 
     // Check if client with email already exists
@@ -222,17 +222,17 @@ router.put('/:id', auth, authorize('ADMIN'), async (req, res) => {
         email: email || existingClient.email,
         paymentHistory: paymentHistory
           ? {
-              deleteMany: {}, // clear old
-              create: paymentHistory.map(ph => ({
-                paymentDate: ph.paymentDate,
-                amountPaid: ph.amountPaid,
-                principalPaid: ph.principalPaid,
-                interestPaid: ph.interestPaid,
-                remainingBalance: ph.remainingBalance,
-                paymentMonth: ph.paymentMonth,
-                paymentYear: ph.paymentYear,
-              })),
-            }
+            deleteMany: {}, // clear old
+            create: paymentHistory.map(ph => ({
+              paymentDate: ph.paymentDate,
+              amountPaid: ph.amountPaid,
+              principalPaid: ph.principalPaid,
+              interestPaid: ph.interestPaid,
+              remainingBalance: ph.remainingBalance,
+              paymentMonth: ph.paymentMonth,
+              paymentYear: ph.paymentYear,
+            })),
+          }
           : undefined,
       },
       include: { paymentHistory: true },
@@ -433,7 +433,7 @@ router.put('/:clientId/assign', auth, authorize('ADMIN'), async (req, res) => {
       },
     });
     console.log('Client assigned to employee successfully:', updatedClient);
-    
+
     res.status(200).json({
       message: 'Client assigned successfully',
       client: updatedClient,
@@ -477,7 +477,7 @@ router.put('/:clientId/unassign', auth, authorize('ADMIN'), async (req, res) => 
       },
     });
     console.log('Client assigned to employee successfully:', updatedClient);
-    
+
     res.status(200).json({
       message: 'Client assigned successfully',
       client: updatedClient,
@@ -488,15 +488,24 @@ router.put('/:clientId/unassign', auth, authorize('ADMIN'), async (req, res) => 
   }
 });
 
-router.get("/client/dashboard", auth, authorize('ADMIN', 'EMPLOYEE'), async (req, res) => {
-  const client = await prisma.client.findUnique({
-    where: { email: req.user.email },
-    include: {
-      loanPayments: true, // or however it's related
-    },
-  });
+router.get(
+  "/client/dashboard",
+  auth,
+  authorize('ADMIN', 'EMPLOYEE', 'USER'), // include USER
+  async (req, res) => {
+    const client = await prisma.client.findUnique({
+      where: { email: req.user.email },
+      include: {
+        paymentHistory: true, // use PaymentHistory relation, not loanPayments
+      },
+    });
 
-  res.json(client);
-});
+    if (!client) {
+      return res.status(404).json({ error: "Client not found" });
+    }
+
+    res.json(client);
+  }
+);
 
 module.exports = router;

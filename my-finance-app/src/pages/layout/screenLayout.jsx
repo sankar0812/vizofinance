@@ -254,7 +254,7 @@ export default function DashboardLayout() {
             '& .MuiDrawer-paper': {
               boxSizing: 'border-box',
               width: isCollapsed ? collapsedWidth : drawerWidth,
-              bgcolor: '#1f1f4aff',
+              bgcolor: '#0d1055ff',
               color: '#fff',
               transition: 'width 0.5s',
               overflowX: 'hidden',

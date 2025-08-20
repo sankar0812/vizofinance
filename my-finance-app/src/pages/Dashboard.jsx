@@ -25,10 +25,28 @@ import {
   Users,
   IndianRupee,
   TrendingUp,
+  TrendingDown,
+  TrendingUpDownIcon,
+  TrendingDownIcon,
   User as UserIcon,
   Download,
   FileText
 } from 'lucide-react'
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 import { useClients } from '../utils/hooks/useClients'
 import { formatINR } from '../utils/currency'
@@ -39,6 +57,8 @@ import { useAuth } from './auth/AuthContext'
 import { ProfileDropdown } from '../components/ProfileDropdown'
 import { useCurrentClient } from '../utils/hooks/useCurrentClient'
 import { useCurrentEmployee } from '../utils/hooks/useCurrentEmployee'
+
+const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
 
 export default function DashboardOverview() {
   const { token, user } = useAuth() || {}
@@ -80,6 +100,24 @@ export default function DashboardOverview() {
     error: employeeError,
     refetch: refetchEmployees
   } = useClients(false, isEmployee)
+
+  const pieData = [
+    { name: "Principal Paid", value: currentClient?.totalPrincipal || 0 },
+    { name: "Interest Paid", value: currentClient?.totalInterest || 0 },
+    { name: "Remaining Due", value: currentClient?.totalDue || 0 },
+  ];
+
+  const paymentData = useMemo(() => {
+    if (!currentClient || !currentClient.paymentHistory) return []
+    return currentClient.paymentHistory.map(payment => ({
+      month: new Date(payment.paymentDate).toLocaleString('en-US', { month: 'short', year: 'numeric' }),
+      principal: payment.principalPaid || 0,
+      interest: payment.interestPaid || 0,
+      total: payment.amountPaid || 0,
+      paymentDate: payment.paymentDate ? new Date(payment.paymentDate).toLocaleDateString() : 'N/A',
+    }))
+  }
+, [currentClient])
 
 
   const totalClients = clients.length
@@ -315,24 +353,81 @@ export default function DashboardOverview() {
 
       {isClient && (
         <Box sx={{ mb: 6 }}>
-          <Typography variant="h5" fontWeight={600}>
-            Welcome, {user?.email} 👋
+          <Typography variant="h5" sx={{mb: 2}} fontWeight={600}>
+            Welcome, {user?.email}
           </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+          {/* <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
             Here’s your loan summary
-          </Typography>
+          </Typography> */}
           {loadingClient ? (
             <Skeleton variant="rounded" height={100} width="100%" />
           ) : !currentClient ? (
             <Typography color="error">Failed to load client data</Typography>
           ) : (
-            <Box display="flex" flexWrap="wrap" justifyContent="space-between" gap={2} p={1} mb={4}>
-              {renderCard('Loan Amount', formatINR(currentClient?.loanAmount || 0), <Users size={20} />)}
+            <Box display="flex" flexWrap="nowwrap" justifyContent="space-between" gap={2} p={1} mb={4}>
+              {renderCard('Loan Amount', formatINR(currentClient?.loanAmount || 0), <IndianRupee size={20} />)}
               {renderCard('Total Paid', formatINR(currentClient.totalPaid || 0), <IndianRupee size={20} />)}
-              {renderCard('Total Due', formatINR(currentClient.totalDue || 0), <TrendingUp size={20} />)}
-              {renderCard('Total Interest', formatINR(currentClient.totalInterest || 0), <UserIcon size={20} />)}
+              {renderCard ('Total Principal', formatINR(currentClient.totalPrincipal || 0), <TrendingUp size={20} />)} 
+              {renderCard('Total Interest', formatINR(currentClient.totalInterest || 0), <TrendingUpDownIcon size={20} />)}
+              {renderCard('Total Due', formatINR(currentClient.totalDue || 0), <TrendingDownIcon size={20} />)}
             </Box>
           )}
+            {/* Charts Section */}
+            <Grid container spacing={3} mt={2}>
+              {/* Line / Bar Chart for Payment History */}
+              <Grid item xs={12} md={8}>
+                <Paper sx={{ p: 2, height: 400 , width: 500}}>
+                  <Typography variant="h6" gutterBottom>
+                    Payment History
+                  </Typography>
+                  <ResponsiveContainer width="100%" height="90%">
+                    <BarChart data={paymentData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="principal" fill="#82ca9d" />
+                      <Bar dataKey="interest" fill="#8884d8" />
+                      <Bar dataKey="total" fill="#ffc658" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </Paper>
+              </Grid>
+
+              {/* Pie Chart Breakdown */}
+              <Grid item xs={12} md={4}>
+                <Paper sx={{ p: 2, height: 400, width: 700, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <Typography variant="h6" gutterBottom>
+                    Loan Breakdown
+                  </Typography>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={pieData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        outerRadius={115}
+                        fill="#8884d8"
+                        dataKey="value"
+                        label={({ name, value }) =>
+                          `${name}: ${formatINR(value)}`
+                        }
+                      >
+                        {pieData.map((entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={COLORS[index % COLORS.length]}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </Paper>
+              </Grid>
+            </Grid>
         </Box>
       )}
     </Box>

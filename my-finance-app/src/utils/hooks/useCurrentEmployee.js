@@ -33,6 +33,7 @@ export const useCurrentEmployee = (options = {}) => {
           (client.paymentHistory || []).forEach((payment) => {
             totalPaid += payment.amountPaid || 0;
             totalDue += payment.remainingBalance || 0;
+            
           });
         });
 

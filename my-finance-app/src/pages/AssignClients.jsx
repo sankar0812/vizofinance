@@ -1,14 +1,212 @@
+// import React, { useEffect, useState } from 'react';
+// import {
+//   Box, Typography, MenuItem, Select, Button, Stack,
+//   CircularProgress, Table, TableBody, TableCell, TableContainer,
+//   TableHead, TableRow, Paper,
+//   Tab
+// } from '@mui/material';
+// import { useClients } from '../utils/hooks/useClients';
+// import { useAuth } from './auth/AuthContext';
+// import { toast } from 'react-toastify';
+// import axios from 'axios';
+
+// const AssignClients = () => {
+//   const { token } = useAuth();
+//   const { data: clients, refetch } = useClients();
+//   const [employees, setEmployees] = useState([]);
+//   const [selectedClientId, setSelectedClientId] = useState('');
+//   const [selectedEmployeeId, setSelectedEmployeeId] = useState('');
+//   const [loading, setLoading] = useState(false);
+//   const [loadingId, setLoadingId] = useState(null);
+
+//   const API_BASE = import.meta.env.VITE_APP_BASE_URL;
+
+//   useEffect(() => {
+//     const fetchEmployees = async () => {
+//       try {
+//         const res = await fetch(`${import.meta.env.VITE_APP_BASE_URL}/api/employees`, {
+//           headers: { Authorization: `Bearer ${token}` },
+//         });
+//         const data = await res.json();
+//         setEmployees(data);
+//       } catch (err) {
+//         console.error('Failed to fetch employees', err);
+//       }
+//     };
+
+//     fetchEmployees();
+//   }, [token]);
+
+//   const handleAssign = async () => {
+//     setLoading(true);
+//     try {
+//       const res = await fetch(`${API_BASE}/api/clients/${selectedClientId}/assign`, {
+//         method: 'PUT',
+//         headers: {
+//           'Content-Type': 'application/json',
+//           Authorization: `Bearer ${token}`,
+//         },
+//         body: JSON.stringify({ employeeId: selectedEmployeeId }),
+//       });
+
+//       if (res.ok) {
+//         await refetch();
+//         toast.success('Client assigned successfully!');
+//         setSelectedClientId('');
+//         setSelectedEmployeeId('');
+//       } else {
+//         const error = await res.json();
+//         alert(`Failed to assign client: ${error.message || 'Unknown error'}`);
+//       }
+//     } catch (err) {
+//       console.error('Assign error', err);
+//       alert('Something went wrong');
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+
+//   const handleUnassign = async (clientId, employeeId) => {
+//     try {
+//       setLoadingId(clientId);
+//       await axios.put(
+//         `${API_BASE}/api/clients/${clientId}/unassign`,
+//         { employeeId },
+//         {
+//           headers: {
+//             Authorization: `Bearer ${token}`,
+//           },
+//         }
+//       );
+//       refetch(); // Refresh the clients list
+//       toast.success('Client unassigned successfully!');
+//     } catch (err) {
+//       console.error('Error unassigning client:', err);
+//     } finally {
+//       setLoadingId(null);
+//     }
+//   };
+
+
+//   return (
+//     <Box>
+//       <Typography variant="h4" fontWeight={700} color="text.primary"
+//         sx={{
+//           mb: 0, pb: 2, color: '#10154cff', fontFamily: 'Roboto, sans-serif', fontStyle: 'normal', letterSpacing: 0.5,
+//           marginTop: 1, marginBottom: 2
+//         }}> Assign Clients to Employees</Typography>
+
+//       <Stack spacing={3} width="100%">
+//         <Select
+//           fullWidth
+//           size='small'
+//           value={selectedEmployeeId}
+//           onChange={(e) => setSelectedEmployeeId(e.target.value)}
+//           displayEmpty
+//         >
+//           <MenuItem value="">Select Employee</MenuItem>
+//           {employees?.map((emp) => (
+//             <MenuItem key={emp.id} value={emp.id}>{emp.email}</MenuItem>
+//           ))}
+
+//         </Select>
+//         <Select
+//           fullWidth
+//           size='small'
+//           value={selectedClientId}
+//           onChange={(e) => setSelectedClientId(e.target.value)}
+//           displayEmpty
+//         >
+//           <MenuItem value="">Select Client</MenuItem>
+//           {clients
+//             .filter(client => !client.assignedTo)
+//             .map(client => (
+//               <MenuItem key={client.id} value={client.id}>
+//                 {client.name} ({client.email})
+//               </MenuItem>
+//             ))}
+//         </Select>
+
+//         <Button
+//           variant="contained"
+//           disabled={!selectedClientId || !selectedEmployeeId || loading}
+//           onClick={handleAssign}
+//         >
+//           {loading ? <CircularProgress size={24} /> : 'Assign'}
+//         </Button>
+//       </Stack>
+
+//       {clients.filter(c => c.assignedTo).length > 0 && (
+//         <>
+//           <Typography variant="h5" fontWeight={400} color="text.primary" mt={5} mb={2}>
+//             Assigned Clients
+//           </Typography>
+//           <TableContainer component={Paper}>
+//             <Table>
+//               <TableHead>
+//                 <TableRow>
+//                   <TableCell><strong>Client Name</strong></TableCell>
+//                   <TableCell><strong>Email</strong></TableCell>
+//                   <TableCell><strong>Assigned To (Employee)</strong></TableCell>
+//                   <TableCell align="center"><strong>UnAssigned</strong></TableCell>
+//                 </TableRow>
+//               </TableHead>
+//               <TableBody>
+//                 {clients
+//                   .filter(client => client.assignedTo)
+//                   .map((client) => (
+//                     <TableRow key={client.id}>
+//                       <TableCell>{client.name}</TableCell>
+//                       <TableCell>{client.email}</TableCell>
+//                       <TableCell>
+//                         {client.employee
+//                           ? `${client.employee.name || ''} (${client.employee.email})`
+//                           : 'Unknown'}
+//                       </TableCell>
+//                       <TableCell align="center">
+//                         <Button
+//                           variant="outlined"
+//                           color="error"
+//                           disabled={loadingId === client.id}
+//                           onClick={() => handleUnassign(client.id, client.assignedTo)}
+//                         >
+//                           {loadingId === client.id
+//                             ? <CircularProgress size={20} />
+//                             : 'Unassign'}
+//                         </Button>
+//                       </TableCell>
+//                     </TableRow>
+//                   ))}
+//               </TableBody>
+//             </Table>
+//           </TableContainer>
+//         </>
+//       )}
+//     </Box>
+//   );
+// };
+
+// export default AssignClients;
+
+
 import React, { useEffect, useState } from 'react';
 import {
   Box, Typography, MenuItem, Select, Button, Stack,
   CircularProgress, Table, TableBody, TableCell, TableContainer,
-  TableHead, TableRow, Paper,
-  Tab
+  TableHead, TableRow, Paper, Grid, Fade, TextField,
+  InputAdornment
 } from '@mui/material';
 import { useClients } from '../utils/hooks/useClients';
 import { useAuth } from './auth/AuthContext';
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import {
+  Person as PersonIcon,
+  Group as GroupIcon,
+  AssignmentTurnedIn as AssignmentIcon
+} from '@mui/icons-material';
+import MuiAlert from '@mui/material/Alert';
 
 const AssignClients = () => {
   const { token } = useAuth();
@@ -18,6 +216,8 @@ const AssignClients = () => {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState('');
   const [loading, setLoading] = useState(false);
   const [loadingId, setLoadingId] = useState(null);
+  const [clientSearch, setClientSearch] = useState('');
+  const [employeeSearch, setEmployeeSearch] = useState('');
 
   const API_BASE = import.meta.env.VITE_APP_BASE_URL;
 
@@ -31,6 +231,7 @@ const AssignClients = () => {
         setEmployees(data);
       } catch (err) {
         console.error('Failed to fetch employees', err);
+        toast.error('Failed to load employees.');
       }
     };
 
@@ -51,21 +252,20 @@ const AssignClients = () => {
 
       if (res.ok) {
         await refetch();
-        toast.success('Client assigned successfully!');
+        toast.success('Client assigned successfully! 🎉');
         setSelectedClientId('');
         setSelectedEmployeeId('');
       } else {
         const error = await res.json();
-        alert(`Failed to assign client: ${error.message || 'Unknown error'}`);
+        toast.error(`Failed to assign client: ${error.message || 'Unknown error'}`);
       }
     } catch (err) {
       console.error('Assign error', err);
-      alert('Something went wrong');
+      toast.error('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
   };
-
 
   const handleUnassign = async (clientId, employeeId) => {
     try {
@@ -79,110 +279,149 @@ const AssignClients = () => {
           },
         }
       );
-      refetch(); // Refresh the clients list
-      toast.success('Client unassigned successfully!');
+      refetch();
+      toast.info('Client unassigned successfully! 👋');
     } catch (err) {
       console.error('Error unassigning client:', err);
+      toast.error('Error unassigning client. Please check the network.');
     } finally {
       setLoadingId(null);
     }
   };
 
+  const filteredEmployees = employees.filter(emp =>
+    emp.email.toLowerCase().includes(employeeSearch.toLowerCase())
+  );
+
+  const filteredClients = clients.filter(client =>
+    !client.assignedTo && client.email.toLowerCase().includes(clientSearch.toLowerCase())
+  );
+  
+  const assignedClients = clients.filter(c => c.assignedTo);
 
   return (
-    <Box>
-      <Typography variant="h4" fontWeight={700} color="text.primary"
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h4" fontWeight={700} color="#10154cff"
         sx={{
-          mb: 0, pb: 2, color: '#10154cff', fontFamily: 'Roboto, sans-serif', fontStyle: 'normal', letterSpacing: 0.5,
-          marginTop: 1, marginBottom: 2
-        }}> Assign Clients to Employees</Typography>
+          mb: 4, fontFamily: 'Roboto, sans-serif', letterSpacing: 0.5
+        }}>
+        Assign Clients to Employees
+      </Typography>
 
-      <Stack spacing={3} width="100%">
-        <Select
-          fullWidth
-          size='small'
-          value={selectedEmployeeId}
-          onChange={(e) => setSelectedEmployeeId(e.target.value)}
-          displayEmpty
-        >
-          <MenuItem value="">Select Employee</MenuItem>
-          {employees?.map((emp) => (
-            <MenuItem key={emp.id} value={emp.id}>{emp.email}</MenuItem>
-          ))}
-
-        </Select>
-        <Select
-          fullWidth
-          size='small'
-          value={selectedClientId}
-          onChange={(e) => setSelectedClientId(e.target.value)}
-          displayEmpty
-        >
-          <MenuItem value="">Select Client</MenuItem>
-          {clients
-            .filter(client => !client.assignedTo)
-            .map(client => (
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={6}>
+          <TextField
+            fullWidth
+            size="small"
+            label="Search Employees"
+            value={employeeSearch}
+            onChange={(e) => setEmployeeSearch(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <PersonIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
+          <Select
+            fullWidth
+            size='small'
+            value={selectedEmployeeId}
+            onChange={(e) => setSelectedEmployeeId(e.target.value)}
+            displayEmpty
+            sx={{ mt: 2 }}
+          >
+            <MenuItem value="">Select Employee</MenuItem>
+            {filteredEmployees.map((emp) => (
+              <MenuItem key={emp.id} value={emp.id}>{emp.email}</MenuItem>
+            ))}
+          </Select>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <TextField
+            fullWidth
+            size="small"
+            label="Search Clients"
+            value={clientSearch}
+            onChange={(e) => setClientSearch(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <GroupIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
+          <Select
+            fullWidth
+            size='small'
+            value={selectedClientId}
+            onChange={(e) => setSelectedClientId(e.target.value)}
+            displayEmpty
+            sx={{ mt: 2 }}
+          >
+            <MenuItem value="">Select Client</MenuItem>
+            {filteredClients.map(client => (
               <MenuItem key={client.id} value={client.id}>
                 {client.name} ({client.email})
               </MenuItem>
             ))}
-        </Select>
+          </Select>
+        </Grid>
+      </Grid>
+      
+      <Button
+        variant="contained"
+        sx={{ mt: 3, backgroundColor: '#10154cff', '&:hover': { backgroundColor: '#0e123bff' } }}
+        disabled={!selectedClientId || !selectedEmployeeId || loading}
+        onClick={handleAssign}
+        startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <AssignmentIcon />}
+      >
+        Assign
+      </Button>
 
-        <Button
-          variant="contained"
-          disabled={!selectedClientId || !selectedEmployeeId || loading}
-          onClick={handleAssign}
-        >
-          {loading ? <CircularProgress size={24} /> : 'Assign'}
-        </Button>
-      </Stack>
-
-      {clients.filter(c => c.assignedTo).length > 0 && (
-        <>
-          <Typography variant="h5" fontWeight={400} color="text.primary" mt={5} mb={2}>
+      <Fade in={assignedClients.length > 0} timeout={1000}>
+        <Box>
+          <Typography variant="h5" fontWeight={400} mt={5} mb={2}>
             Assigned Clients
           </Typography>
-          <TableContainer component={Paper}>
+          <TableContainer component={Paper} elevation={3}>
             <Table>
-              <TableHead>
+              <TableHead sx={{ backgroundColor: '#f5f5f5' }}>
                 <TableRow>
                   <TableCell><strong>Client Name</strong></TableCell>
                   <TableCell><strong>Email</strong></TableCell>
                   <TableCell><strong>Assigned To (Employee)</strong></TableCell>
-                  <TableCell align="center"><strong>UnAssigned</strong></TableCell>
+                  <TableCell align="center"><strong>Actions</strong></TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {clients
-                  .filter(client => client.assignedTo)
-                  .map((client) => (
-                    <TableRow key={client.id}>
-                      <TableCell>{client.name}</TableCell>
-                      <TableCell>{client.email}</TableCell>
-                      <TableCell>
-                        {client.employee
-                          ? `${client.employee.name || ''} (${client.employee.email})`
-                          : 'Unknown'}
-                      </TableCell>
-                      <TableCell align="center">
-                        <Button
-                          variant="outlined"
-                          color="error"
-                          disabled={loadingId === client.id}
-                          onClick={() => handleUnassign(client.id, client.assignedTo)}
-                        >
-                          {loadingId === client.id
-                            ? <CircularProgress size={20} />
-                            : 'Unassign'}
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                {assignedClients.map((client) => (
+                  <TableRow key={client.id} hover>
+                    <TableCell>{client.name}</TableCell>
+                    <TableCell>{client.email}</TableCell>
+                    <TableCell>
+                      {client.employee ? `${client.employee.name || ''} (${client.employee.email})` : 'Unknown'}
+                    </TableCell>
+                    <TableCell align="center">
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        size="small"
+                        disabled={loadingId === client.id}
+                        onClick={() => handleUnassign(client.id, client.assignedTo)}
+                      >
+                        {loadingId === client.id ? <CircularProgress size={20} /> : 'Unassign'}
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           </TableContainer>
-        </>
-      )}
+        </Box>
+      </Fade>
     </Box>
   );
 };

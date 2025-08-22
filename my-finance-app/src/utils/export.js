@@ -24,3 +24,4 @@ export async function exportClientsToCSV(clients, fileName = 'clients.csv') {
   a.click()
   URL.revokeObjectURL(url)
 }
+

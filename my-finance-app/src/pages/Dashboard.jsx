@@ -58,6 +58,10 @@ import { ProfileDropdown } from '../components/ProfileDropdown'
 import { useCurrentClient } from '../utils/hooks/useCurrentClient'
 import { useCurrentEmployee } from '../utils/hooks/useCurrentEmployee'
 
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import Papa from "papaparse";
+
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
 
 export default function DashboardOverview() {
@@ -94,12 +98,10 @@ export default function DashboardOverview() {
     deleteClient
   } = useClients(isAdmin)
 
+
   const {
-    data: employees,
-    loading: loadingEmployees,
-    error: employeeError,
-    refetch: refetchEmployees
-  } = useClients(false, isEmployee)
+    data: employee = []
+  } = useCurrentEmployee();
 
   const pieData = [
     { name: "Principal Paid", value: currentClient?.totalPrincipal || 0 },
@@ -124,7 +126,7 @@ export default function DashboardOverview() {
   const totalRevenue = clients.reduce((sum, c) => sum + (c.revenue || 0), 0)
   const avgRevenuePerClient = totalClients > 0 ? totalRevenue / totalClients : 0
   const activeClients = clients.filter((c) => c.status === 'Active').length
-  const totalemployee = employees.length || 0
+  const totalemployee = Array.isArray(employee) ? employee.length : 0
 
 
   const revenueData = useMemo(() => {
@@ -163,6 +165,79 @@ export default function DashboardOverview() {
     doc.text(`Active Clients: ${activeClients}`, 14, 56)
     doc.save('finance-dashboard.pdf')
   }
+
+const handleExportclientPDF = () => {
+  const doc = new jsPDF();
+
+  // Title
+  doc.setFontSize(16);
+  doc.text("Client Dashboard Snapshot", 14, 20);
+
+  // Summary
+  doc.setFontSize(12);
+  doc.text(`Loan Amount: ${formatINR(currentClient?.loanAmount || 0)}`, 14, 35);
+  doc.text(`Total Paid: ${formatINR(currentClient?.totalPaid || 0)}`, 14, 42);
+  doc.text(`Total Principal: ${formatINR(currentClient?.totalPrincipal || 0)}`, 14, 49);
+  doc.text(`Total Interest: ${formatINR(currentClient?.totalInterest || 0)}`, 14, 56);
+  doc.text(`Total Due: ${formatINR(currentClient?.totalDue || 0)}`, 14, 63);
+
+  // ✅ Use autoTable function, not doc.autoTable
+  if (currentClient?.paymentHistory?.length > 0) {
+    autoTable(doc, {
+      startY: 75,
+      head: [["#", "Date", "Principal Paid", "Interest Paid", "Total Paid", "Remaining Balance"]],
+      body: currentClient.paymentHistory.map((payment, index) => [
+        index + 1,
+        payment.paymentDate ? new Date(payment.paymentDate).toLocaleDateString() : "N/A",
+        formatINR(payment.principalPaid || 0),
+        formatINR(payment.interestPaid || 0),
+        formatINR(payment.amountPaid || 0),
+        formatINR(payment.remainingBalance || 0),
+      ]),
+      theme: "grid",
+      headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: "bold" },
+      bodyStyles: { fontSize: 10 },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+      styles: { cellPadding: 3 },
+    });
+  }
+
+  doc.save("client-dashboard.pdf");
+};
+
+// ✅ CSV Export
+const handleExportclientCSV = () => {
+  if (!currentClient?.paymentHistory?.length) {
+    alert("No payment history available for CSV export.");
+    return;
+  }
+
+  // Prepare CSV rows
+  const rows = currentClient.paymentHistory.map((payment, index) => ({
+    "#": index + 1,
+    Date: payment.paymentDate
+      ? new Date(payment.paymentDate).toLocaleDateString()
+      : "N/A",
+    "Principal Paid": payment.principalPaid || 0,
+    "Interest Paid": payment.interestPaid || 0,
+    "Total Paid": payment.amountPaid || 0,
+    "Remaining Balance": payment.remainingBalance || 0,
+  }));
+
+  // Convert to CSV
+  const csv = Papa.unparse(rows);
+
+  // Download
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "client-dashboard.csv";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
 
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
@@ -428,6 +503,19 @@ export default function DashboardOverview() {
                 </Paper>
               </Grid>
             </Grid>
+            <Paper elevation={1} sx={{ p: 3, mt: 5, mb: 2}}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} alignItems="center" justifyContent="space-between" spacing={2}>
+              <Typography variant="subtitle1">Export Data</Typography>
+              <Box>
+                <Button variant="contained" color="primary" startIcon={<Download size={16} />} sx={{ mr: { xs: 0, sm: 1 }, mb: { xs: 1, sm: 0 } }} onClick={handleExportclientCSV}>
+                  Export CSV
+                </Button>
+                <Button variant="contained" color="error" startIcon={<FileText size={16} />} onClick={handleExportclientPDF}>
+                  Export PDF
+                </Button>
+              </Box>
+            </Stack>
+          </Paper>
         </Box>
       )}
     </Box>

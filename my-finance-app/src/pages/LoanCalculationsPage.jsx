@@ -39,6 +39,7 @@ export default function LoanCalculationsPage({ customConfirm }) {
   const theme = useTheme();
   const { token, user } = useAuth() || {};
   const isAdmin = user?.role === 'ADMIN';
+  const isEmployee = user?.role === 'EMPLOYEE';
   const isSmDown = useMediaQuery(theme.breakpoints.down('sm'));
   const { data: clients, loading, error, refetch } = useClients();
 
@@ -160,7 +161,7 @@ export default function LoanCalculationsPage({ customConfirm }) {
     }
   };
 
-  if (loading && isAdmin) {
+  if (loading && isAdmin && isEmployee) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', mt: 5 }}>
         <CircularProgress />
@@ -168,7 +169,7 @@ export default function LoanCalculationsPage({ customConfirm }) {
     );
   }
 
-  if (error && isAdmin) {
+  if (error && isAdmin && isEmployee) {
     return (
       <Alert severity="error" sx={{ mt: 3 }}>
         Failed to load clients. Please try again.
@@ -176,7 +177,7 @@ export default function LoanCalculationsPage({ customConfirm }) {
     );
   }
 
-  if (!isAdmin) {
+  if (!isAdmin && !isEmployee) {
     return <UnauthorizedError />;
   }
 
@@ -455,3 +456,6 @@ ClientLoanLine.propTypes = {
   label: PropTypes.string.isRequired,
   value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
 };
+
+
+

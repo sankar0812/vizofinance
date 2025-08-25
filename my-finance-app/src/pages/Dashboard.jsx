@@ -121,6 +121,28 @@ export default function DashboardOverview() {
   }
 , [currentClient])
 
+const employeePieData = [
+  { name: "Total Loan Given", value: currentEmployee?.employee?.totalLoanGiven || 0 },
+  { name: "Revenue Collected", value: currentEmployee?.employee?.totalPaid || 0 },
+  { name: "EMI Due", value: currentEmployee?.employee?.totalDue || 0 },
+];
+
+const employeePaymentData = useMemo(() => {
+  if (!currentEmployee || !currentEmployee.paymentHistory) return [];
+
+  return currentEmployee.paymentHistory.map(payment => ({
+    month: new Date(payment.paymentDate).toLocaleString('en-US', { month: 'short', year: 'numeric' }),
+    principal: payment.principalPaid || 0,
+    interest: payment.interestPaid || 0,
+    total: payment.amountPaid || 0,
+    paymentDate: payment.paymentDate 
+      ? new Date(payment.paymentDate).toLocaleDateString() 
+      : 'N/A',
+  }));
+}, [currentEmployee]);
+
+
+
 
   const totalClients = clients.length
   const totalRevenue = clients.reduce((sum, c) => sum + (c.revenue || 0), 0)
@@ -419,10 +441,66 @@ const handleExportclientCSV = () => {
           ) : (
             <Box display="flex" flexWrap="wrap" justifyContent="space-between" gap={1} p={1} mb={4}>
               {renderCard('Total Assigned Clients', currentEmployee?.employee?.assignclient, <Users size={20} />)}
+              {renderCard('Total Loan Given', formatINR(currentEmployee?.employee?.totalLoanGiven), <IndianRupee size={20} />)}
               {renderCard('Revenue Collected', formatINR(currentEmployee?.employee?.totalPaid), <IndianRupee size={20} />)}
               {renderCard('EMI Due', formatINR(currentEmployee?.employee?.totalDue), <TrendingUp size={20} />)}
             </Box>
           )}
+           {/* Charts Section */}
+           <Grid container spacing={3} mt={2}>
+          {/* Left: Bar/Line Chart (Optional - like payment history for employees) */}
+          <Grid item xs={12} md={8}>
+            <Paper sx={{ p: 2, height: 400, width: 500 }}>
+              <Typography variant="h6" gutterBottom>
+                Collection Overview
+              </Typography>
+              <ResponsiveContainer width="100%" height="90%">
+                <BarChart data={employeePaymentData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="loanGiven" fill="#82ca9d" />
+                  <Bar dataKey="revenueCollected" fill="#8884d8" />
+                  <Bar dataKey="emiDue" fill="#ffc658" />
+                </BarChart>
+              </ResponsiveContainer>
+            </Paper>
+          </Grid>
+          {/* Right: Pie Chart */}
+          <Grid item xs={12} md={4}>
+            <Paper sx={{ p: 2, height: 400, width: 700, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <Typography variant="h6" gutterBottom>
+                Loan Breakdown
+              </Typography>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={employeePieData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    outerRadius={115}
+                    fill="#8884d8"
+                    dataKey="value"
+                    label={({ name, value }) =>
+                      `${name}: ${formatINR(value)}`
+                    }
+                  >
+                    {employeePieData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </Paper>
+          </Grid>
+        </Grid>
         </Box>
       ) : null}
 
